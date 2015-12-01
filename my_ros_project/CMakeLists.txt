@@ -121,7 +121,7 @@ include_directories(include)
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(${PROJECT_NAME}_node src/my_project_node.cpp src/demo_class.cpp)
+add_executable(${PROJECT_NAME}_node src/my_node.cpp src/demo_class.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

@@ -6,6 +6,6 @@ RUN apt-get update
 # Install non-ROS dependencies
 RUN apt-get install -y g++ python-pip
 # Install ROS dependencies
-RUN apt-get install -y ros-jade-tf ros-jade-tf2
+RUN apt-get install -y ros-jade-tf ros-jade-tf2 ros-jade-roslint
 # Install pip based stuff
 RUN pip install gcovr
