@@ -5,7 +5,8 @@ LABEL Description="Speech recognition thesis"
 # Copy reposity contents
 RUN mkdir /test
 RUN mkdir /test/src
-COPY my_ros_project /test/src/my_ros_project # replace with real value
+# replace with real project name
+COPY my_ros_project /test/src/my_ros_project
 ADD docker.sh .
 RUN mkdir /results
 CMD bash docker.sh 2> /results/stderr 1> /results/stdout
