@@ -4,7 +4,7 @@
 
 #include "demo_class.h"
 
-class DemoClassTest : public ::testing::Test
+class DemoTestSuite : public ::testing::Test
 {
 protected:
    demo_namespace::DemoClass* demo;
