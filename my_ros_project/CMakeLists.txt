@@ -172,9 +172,9 @@ add_executable(${PROJECT_NAME}_node src/my_project_node.cpp src/demo_class.cpp)
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test test/test_my_ros_project.cpp)
+catkin_add_gtest(${PROJECT_NAME}-test test/test_my_ros_project.cpp src/demo_class.cpp)
 if(TARGET ${PROJECT_NAME}-test)
-   target_link_libraries(${PROJECT_NAME}-test) # ${PROJECT_NAME})
+   target_link_libraries(${PROJECT_NAME}-test)
 endif()
 
 ## Add folders to be run by python nosetests
