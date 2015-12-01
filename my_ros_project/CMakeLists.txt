@@ -108,7 +108,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -121,7 +121,7 @@ catkin_package(
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(${PROJECT_NAME}_node src/my_ros_project_node.cpp)
+add_executable(${PROJECT_NAME}_node src/my_project_node.cpp src/demo_class.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
