@@ -3,15 +3,15 @@
 namespace demo_namespace
 {
 
-DemoClass::DemoClass()
-{
-   ROS_INFO("Constructor!");
-}
+  DemoClass::DemoClass()
+  {
+    ROS_INFO("Constructor!");
+  }
 
-bool DemoClass::demo_function()
-{
-   ROS_INFO("demo_function()");
-   return true;
-}
+  bool DemoClass::demo_function()
+  {
+    ROS_INFO("demo_function()");
+    return true;
+  }
 
 }

@@ -5,9 +5,9 @@ namespace demo_namespace
 
 class DemoClass
 {
-public:
-   DemoClass();
-   bool demo_function();
+ public:
+  DemoClass();
+  bool demo_function();
 
 };
 
