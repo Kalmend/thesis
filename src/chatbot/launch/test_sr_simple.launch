@@ -1,0 +1,9 @@
+<launch>
+    <env name="GST_PLUGIN_PATH" value="$(find speech_recognition_simple)/../../deps" />
+	<group ns="audio">
+		<node name="chatbot_speech_recognition" pkg="speech_recognition_simple" type="speech_recognition_simple" output="screen">
+			<param name="model_dir" value="$(find speech_recognition_speex)/../../deps" />
+		</node>
+	</group>
+
+</launch>

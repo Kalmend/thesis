@@ -1,0 +1,7 @@
+All the test launch configurations are in the chatbot package.
+Simple speech recognition can be started:
+    *Currently some paths are hard-coded, deps/conf/ivector_extractor.fixed.conf has to be edited to point to the correct dependencies. 
+    *deps/prepare-models.sh
+    *source devel/setup.h
+    *roslaunch chatbot test_sr_simple.launch
+

@@ -1,0 +1,16 @@
+<launch>
+	<group ns="audio">
+		<node name="chatbot_mic" pkg="capture_audio_new" type="capture_audio_new">
+			<param name="bitrate" value="128"/>
+			<remap from="audio" to="mic_input_stream"/>
+  		</node>
+	</group>
+	
+	<group ns="audio">
+		<node name="chatbot_speaker" pkg="play_audio_new" type="play_audio_new">
+			<param name="dst" value="alsasink"/>
+			<remap from="audio" to="mic_input_stream"/>
+		</node>
+	</group>
+
+</launch>

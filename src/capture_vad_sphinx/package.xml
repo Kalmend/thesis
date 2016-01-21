@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>capture_vad_sphinx</name>
+  <version>0.0.1</version>
+  <description>The capture_vad_sphinx package</description>
+  <maintainer email="kalmendoliver@gmail.com">Oliver Kalmend</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>audio_common_msgs</build_depend>
+  <build_depend>libgstreamer0.10-dev</build_depend>
+  <build_depend>libgstreamer-plugins-base0.10-dev</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>audio_common_msgs</run_depend>
+  <run_depend>libgstreamer0.10-0</run_depend>
+  <run_depend>libgstreamer-plugins-base0.10-0</run_depend>
+  <run_depend>gstreamer0.10-plugins-ugly</run_depend>
+  <run_depend>gstreamer0.10-alsa</run_depend>
+  <run_depend>gstreamer0.10-plugins-good</run_depend>
+  <run_depend>gstreamer0.10-pocketsphinx</run_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>

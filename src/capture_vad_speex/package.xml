@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>capture_vad_speex</name>
+  <version>0.0.1</version>
+  <description>Captures audio, performs VAD and encodes to speex format. offers service for getting speex capabilities</description>
+  <maintainer email="kalmendoliver@gmail.com">oliver kalmend</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>audio_common_msgs</build_depend>
+  <build_depend>libgstreamer1.0-dev</build_depend>
+  <build_depend>libgstreamer-plugins-base1.0-dev</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>audio_common_msgs</run_depend>
+  <run_depend>libgstreamer1.0-0</run_depend>
+  <run_depend>libgstreamer-plugins-base1.0-0</run_depend>
+  <run_depend>gstreamer1.0-plugins-ugly</run_depend>
+  <run_depend>gstreamer1.0-plugins-good</run_depend>
+  <run_depend>std_msgs</run_depend>
+  
+  <export>
+  </export>
+</package>
