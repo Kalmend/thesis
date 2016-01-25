@@ -59,5 +59,4 @@ private:
 
 	boost::thread gst_thread_;
 	GMainLoop *loop_;
-	bool paused_;
 };

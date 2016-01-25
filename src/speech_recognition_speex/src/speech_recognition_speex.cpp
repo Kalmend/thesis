@@ -10,7 +10,6 @@ SpeechRecognitionSpeex::SpeechRecognitionSpeex()
 	setupPipeline();
 	gst_element_set_state(GST_ELEMENT(pipeline_), GST_STATE_PLAYING);
 	gst_thread_ = boost::thread(boost::bind(g_main_loop_run, loop_));
-	paused_ = false;
 }
 
 SpeechRecognitionSpeex::~SpeechRecognitionSpeex()
@@ -24,20 +23,11 @@ SpeechRecognitionSpeex::~SpeechRecognitionSpeex()
 
 void SpeechRecognitionSpeex::onNeedData(GstElement *appsrc, guint unused_size, gpointer user_data)
 {
-	ROS_WARN("need-data signal emitted! Pausing the pipeline");
 	SpeechRecognitionSpeex *client = reinterpret_cast<SpeechRecognitionSpeex*>(user_data);
-	gst_element_set_state(GST_ELEMENT(client->pipeline_), GST_STATE_PAUSED);
-	client->paused_ = true;
 }
 
 void SpeechRecognitionSpeex::onAudio(const audio_common_msgs::AudioDataConstPtr &msg)
 {
-	if (paused_)
-	{
-		ROS_INFO("Got first audio after pause, resuming.");
-		gst_element_set_state(GST_ELEMENT(pipeline_), GST_STATE_PLAYING);
-		paused_ = false;
-	}
 	GstBuffer *buffer = gst_buffer_new_and_alloc(msg->data.size());
 	gst_buffer_fill(buffer, 0, &msg->data[0], msg->data.size());
 	GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(source_), buffer);
@@ -160,7 +150,7 @@ void SpeechRecognitionSpeex::setupPipeline()
 
 	if (destination_type_ == "appsink")
 	{
-		assert("NOT YET IMPLEMENTED\n");
+		exitOnMainThread("Appsink not yet implemented",0);
 	}
 	else
 	{

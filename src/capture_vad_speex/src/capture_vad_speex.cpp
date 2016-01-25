@@ -14,7 +14,7 @@ using namespace std;
 class RosGstSpeexCapture
 {
 public:
-	RosGstSpeexCapture() : destination_type_("appsink"), bitrate_(0), publishBackoff_(0)
+	RosGstSpeexCapture() : destination_type_("appsink"), bitrate_(0)/*, publishBackoff_(0)*/
 {
 		parseArguments();
 		// The source of the audio
@@ -173,6 +173,7 @@ private:
 
 	void publish( const audio_common_msgs::AudioData &msg )
 	{
+		/*
 		if(msg.data.size() <= 2) // we dont want to send the 2 byte comfort noise
 			publishBackoff_ = 2; // dont send this and one more
 
@@ -180,7 +181,7 @@ private:
 		{
 			publishBackoff_--;
 			return;
-		}
+		}*/
 		pub_.publish(msg);
 	}
 
@@ -194,7 +195,7 @@ private:
 	ros::Publisher pub_;
 	ros::ServiceServer serviceSrv_;
 	string speexCaps_;
-	int publishBackoff_;
+	//int publishBackoff_;
 
 	//pipeline elements
 	GstElement *pipeline_, *source_, *sink_, *convert_, *encode_;
