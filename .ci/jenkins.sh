@@ -1,9 +1,10 @@
 #!/bin/bash
-rm -rf deps
 rm -rf results
+rm -f docker.sh
+rm -f Dockerfile
+rm -f jenkins.sh
 mv .ci/* .
 mkdir results 
 if [ ${REBUILD_DEPS} -ne 0 ]; then nocache="--no-cache"; fi
-docker build $nocache -t ros-sprec-deps deps/
-docker build --no-cache -t ros-sprec .
+docker build $nocache -t ros-sprec .
 docker run -v "${WORKSPACE}/results:/results" ros-sprec
