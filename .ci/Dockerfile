@@ -10,9 +10,9 @@ RUN pip install gcovr
 
 # Copy reposity contents
 RUN mkdir /test
-RUN mkdir /test/src
+RUN mkdir /test/workspace
 # replace with real project name
-COPY my_ros_project /test/src/my_ros_project
+COPY * /test/workspace/
 ADD docker.sh .
 RUN mkdir /results
 CMD bash docker.sh 2> /results/stderr 1> /results/stdout
