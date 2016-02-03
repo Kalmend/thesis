@@ -7,6 +7,8 @@ source /opt/ros/jade/setup.bash
 cd /test/workspace
 # Build with coverage support
 ./make_all_debug.sh
+rm -rf build/
+rm -rf devel/
 #catkin_make --cmake-args -DCMAKE_CXX_FLAGS="-fprofile-arcs -ftest-coverage"
 #sleep 60
 ## Run tests

@@ -3,7 +3,7 @@ rm -rf results
 rm -f docker.sh
 rm -f Dockerfile
 rm -f jenkins.sh
-mv .ci/* .
+cp .ci/* .
 mkdir results 
 if [ ${REBUILD_DEPS} -ne 0 ]; then nocache="--no-cache"; fi
 docker build $nocache -t ros-sprec .
