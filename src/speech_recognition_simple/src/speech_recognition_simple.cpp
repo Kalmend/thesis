@@ -2,16 +2,17 @@
 
 using namespace std;
 
-SpeechRecognitionSpeex::SpeechRecognitionSpeex()
+SpeechRecognitionSimple::SpeechRecognitionSimple()
 {
 	parseArguments();
+	pub_ = nh_.advertise<std_msgs::String>("raw_result", 10, true);
 	loop_ = g_main_loop_new(NULL, false);
 	setupPipeline();
 	gst_element_set_state(GST_ELEMENT(pipeline_), GST_STATE_PLAYING);
 	gst_thread_ = boost::thread(boost::bind(g_main_loop_run, loop_));
 }
 
-SpeechRecognitionSpeex::~SpeechRecognitionSpeex()
+SpeechRecognitionSimple::~SpeechRecognitionSimple()
 {
 	g_main_loop_quit(loop_);
 	gst_element_set_state(pipeline_, GST_STATE_NULL);
@@ -20,9 +21,9 @@ SpeechRecognitionSpeex::~SpeechRecognitionSpeex()
 
 }
 
-gboolean SpeechRecognitionSpeex::onBusMessage(GstBus* bus, GstMessage* msg, gpointer userData)
+gboolean SpeechRecognitionSimple::onBusMessage(GstBus* bus, GstMessage* msg, gpointer userData)
 {
-	SpeechRecognitionSpeex *server = reinterpret_cast<SpeechRecognitionSpeex*>(userData);
+	SpeechRecognitionSimple *server = reinterpret_cast<SpeechRecognitionSimple*>(userData);
 
 	switch (GST_MESSAGE_TYPE(msg))
 	{
@@ -47,14 +48,41 @@ gboolean SpeechRecognitionSpeex::onBusMessage(GstBus* bus, GstMessage* msg, gpoi
 	return true;
 }
 
-void SpeechRecognitionSpeex::exitOnMainThread(const std::string &message, int code)
+GstFlowReturn SpeechRecognitionSimple::onNewRecognition(
+		GstAppSink *appsink, gpointer userData)
+{
+	SpeechRecognitionSimple *server = reinterpret_cast<SpeechRecognitionSimple*>(userData);
+	GstMapInfo map;
+	GstSample *sample;
+	g_signal_emit_by_name(appsink, "pull-sample", &sample);
+
+	GstBuffer *buffer = gst_sample_get_buffer(sample);
+
+	std_msgs::String msg;
+	gst_buffer_map(buffer, &map, GST_MAP_READ);
+	msg.data.resize(map.size);
+
+	memcpy(&msg.data[0], map.data, map.size);
+
+	server->publish(msg);
+	return GST_FLOW_OK;
+}
+
+void SpeechRecognitionSimple::publish( const std_msgs::String &msg )
+{
+	pub_.publish(msg);
+}
+
+
+void SpeechRecognitionSimple::exitOnMainThread(const std::string &message, int code)
 {
 	ROS_ERROR("%s\n", message.c_str());
 	exit(code);
 }
 
-void SpeechRecognitionSpeex::parseArguments()
+void SpeechRecognitionSimple::parseArguments()
 {
+	ros::param::param<string>("~dst", destination_type_, "appsink");
 	ros::param::param<bool>("~threaded_decoder", sr_arguments_.threaded_decoder, true);
 	ros::param::param<bool>("~do_endpointing", sr_arguments_.do_endpointing, true);
 	ros::param::param<string>("~model_dir", sr_arguments_.model_dir, "error");
@@ -77,7 +105,7 @@ void SpeechRecognitionSpeex::parseArguments()
 	ros::param::param<float>("~chunk_length_s", sr_arguments_.chunk_length_s, 0.2);
 }
 
-GstElement* SpeechRecognitionSpeex::getSpeechRecognition()
+GstElement* SpeechRecognitionSimple::getSpeechRecognition()
 {
 	GstElement* recog = gst_element_factory_make("kaldinnet2onlinedecoder", "recog");
 	if (!recog)
@@ -98,7 +126,7 @@ GstElement* SpeechRecognitionSpeex::getSpeechRecognition()
 	return recog;
 }
 
-void SpeechRecognitionSpeex::setupPipeline()
+void SpeechRecognitionSimple::setupPipeline()
 {
 
 	pipeline_ = gst_pipeline_new("ros_pipeline");
@@ -107,9 +135,17 @@ void SpeechRecognitionSpeex::setupPipeline()
 	convert_ = gst_element_factory_make("audioconvert", "convert");
 	resample_ = gst_element_factory_make("audioresample", "resample");
 	recog_ = getSpeechRecognition();
-	sink_ = gst_element_factory_make("filesink", "sink");
-	g_object_set(G_OBJECT(sink_), "location", "/dev/stdout", NULL);
-	g_object_set(G_OBJECT(sink_), "buffer-mode", 2, NULL);
+	if (destination_type_ == "appsink")
+		{
+			sink_ = gst_element_factory_make("appsink", "sink");
+			g_object_set(G_OBJECT(sink_), "emit-signals", true, NULL);
+			g_object_set(G_OBJECT(sink_), "max-buffers", 100, NULL);
+			g_signal_connect( G_OBJECT(sink_), "new-sample", G_CALLBACK(onNewRecognition), this);
+		} else {
+			sink_ = gst_element_factory_make("filesink", "sink");
+			g_object_set(G_OBJECT(sink_), "location", "/dev/stdout", NULL);
+			g_object_set(G_OBJECT(sink_), "buffer-mode", 2, NULL);
+		}
 
 	gst_bin_add_many(GST_BIN(pipeline_), source_, convert_, resample_, recog_, sink_, NULL);
 
@@ -134,7 +170,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "audio_play", ros::init_options::NoSigintHandler);
 	gst_init(&argc, &argv);
 
-	SpeechRecognitionSpeex client;
+	SpeechRecognitionSimple client;
 	ros::spin();
 	return 0;
 }

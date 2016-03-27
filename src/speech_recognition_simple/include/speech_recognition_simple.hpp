@@ -2,24 +2,31 @@
 #include <ros/ros.h>
 #include <signal.h>
 #include <boost/thread.hpp>
-
+#include <gst/app/gstappsink.h>
+#include <std_msgs/String.h>
 using namespace std;
 
-class SpeechRecognitionSpeex
+
+class SpeechRecognitionSimple
 {
 public:
-	SpeechRecognitionSpeex();
-	~SpeechRecognitionSpeex();
+	SpeechRecognitionSimple();
+	~SpeechRecognitionSimple();
 
 
 private:
 
 	static gboolean onBusMessage(GstBus* bus, GstMessage* msg, gpointer userData);
+	static GstFlowReturn onNewRecognition (GstAppSink *appsink, gpointer userData);
+
+	void publish( const std_msgs::String &msg );
+
 	void exitOnMainThread(const std::string & message, int code);
 	void parseArguments();
 	void setupPipeline();
 	GstElement* getSpeechRecognition();
 
+	std::string destination_type_;
 	//arguments
 	struct SRArguments
 	{
@@ -40,6 +47,8 @@ private:
 	} sr_arguments_;
 	//ROS stuff
 	ros::ServiceClient serviceClient_;
+	ros::NodeHandle nh_;
+	ros::Publisher pub_;
 
 	//pipeline elements
 	GstElement *pipeline_, *source_, *sink_, *resample_, *convert_, *recog_;

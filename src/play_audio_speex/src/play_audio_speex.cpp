@@ -9,13 +9,13 @@
 
 using namespace std;
 
-class SpeechRecognitionSpeex
+class SpeechRecognitionSimple
 {
 public:
-	SpeechRecognitionSpeex()
+	SpeechRecognitionSimple()
 	{
 		parseArguments();
-		sub_ = nh_.subscribe("audio", 10, &SpeechRecognitionSpeex::onAudio, this);
+		sub_ = nh_.subscribe("audio", 10, &SpeechRecognitionSimple::onAudio, this);
 		loop_ = g_main_loop_new(NULL, false);
 		setupPipeline();
 		gst_element_set_state(GST_ELEMENT(pipeline_), GST_STATE_PLAYING);
@@ -24,7 +24,7 @@ public:
 	}
 
 
-	~SpeechRecognitionSpeex()
+	~SpeechRecognitionSimple()
 	{
 		g_main_loop_quit(loop_);
 		gst_element_set_state(pipeline_, GST_STATE_NULL);
@@ -41,7 +41,7 @@ private:
 			gpointer    user_data)
 	{
 		ROS_WARN("need-data signal emitted! Pausing the pipeline");
-		SpeechRecognitionSpeex *client = reinterpret_cast<SpeechRecognitionSpeex*>(user_data);
+		SpeechRecognitionSimple *client = reinterpret_cast<SpeechRecognitionSimple*>(user_data);
 		gst_element_set_state(GST_ELEMENT(client->pipeline_), GST_STATE_PAUSED);
 		client->paused_ = true;
 	}
@@ -61,7 +61,7 @@ private:
 
 	static gboolean onBusMessage(GstBus* bus, GstMessage* msg, gpointer userData)
 		{
-			SpeechRecognitionSpeex *server = reinterpret_cast<SpeechRecognitionSpeex*>(userData);
+			SpeechRecognitionSimple *server = reinterpret_cast<SpeechRecognitionSimple*>(userData);
 
 			switch (GST_MESSAGE_TYPE(msg))
 			{
@@ -186,7 +186,7 @@ int main (int argc, char **argv)
 	ros::init(argc, argv, "audio_play", ros::init_options::NoSigintHandler);
 	gst_init(&argc, &argv);
 
-	SpeechRecognitionSpeex client;
+	SpeechRecognitionSimple client;
 	ros::spin();
 	return 0;
 }

@@ -1,0 +1,2 @@
+--feature-type=mfcc
+--mfcc-config=/storage/tanel/kaldi-et/build/exp/nnet2_online_ivector_multisplice_online/conf/mfcc.conf

@@ -1,0 +1,46 @@
+# Use the new kaldinnet2onlinedecoder
+use-nnet2 : True
+
+decoder:
+   use-threaded-decoder: false
+   model:     models/final.mdl
+   word-syms: models/words.txt
+   fst:       models/HCLG.fst
+   mfcc-config : models/conf/mfcc.conf
+   ivector-extraction-config : models/conf/ivector_extractor.conf
+   do-endpointing : True
+   endpoint-silence-phones : "1:2:3:4:5:6:7:8:9:10"
+   acoustic-scale: 0.0833
+   max-active: 10000 # 15000
+   beam:  10.0
+   lattice-beam: 8.0
+   chunk-length-in-secs: 0.2
+   traceback-period-in-secs: 1.0
+   #iendpoint-rule2-min-trailing-silence: 3.0
+   #endpoint-rule3-min-trailing-silence: 3.0
+   #endpoint-rule4-min-trailing-silence: 3.0
+   #endpoint-rule5-min-utterance-length: 60.0
+
+silence-timeout: 20
+
+
+out-dir: audio
+
+post-processor: /home/tanel/tools/srilm/bin/i686-m64/hidden-ngram -hidden-vocab compounder-hidden.vocab -lm compounder-pruned.vestlused-dev.splitw.arpa.gz  -text - -keep-unk | perl -npe 'BEGIN {use IO::Handle; STDOUT->autoflush(1);} s/ ?\+C\+ ?//g; s/ ?\+D\+ ?/-/g; s/<newline>/\\n/g; s/([.,!?:;])[A-Z]+/\1/g;' | thraxrewrite-tester --far=numbers.far --rules=UNEXPAND_NUMBERS_AND_ORDINALS,BytesToChars,UNEXPANDED_CHAR_LM,CharsToBytes | perl -npe 'BEGIN {use IO::Handle; STDOUT->autoflush(1);} s/(\S+\s+){4}//; s/\+\+garbage\+\+//g;'
+
+
+logging:
+    version : 1
+    disable_existing_loggers: False
+    formatters:
+        simpleFormater:
+            format: '%(asctime)s - %(levelname)7s: %(name)10s: %(message)s'
+            datefmt: '%Y-%m-%d %H:%M:%S'
+    handlers:
+        console:
+            class: logging.StreamHandler
+            formatter: simpleFormater
+            level: DEBUG
+    root:
+        level: DEBUG
+        handlers: [console]
