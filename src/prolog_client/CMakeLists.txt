@@ -26,6 +26,11 @@ catkin_package(
     roscpp_nodewrap
 )
 
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../robotcommHCL.pl)
+    message( FATAL_ERROR "Could not find chat core! missing "  ${CMAKE_SOURCE_DIR}/../robotcommHCL.pl )
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../robotcommHCL.pl)
+add_definitions(-DCHAT_CORE="${CMAKE_SOURCE_DIR}/../robotcommHCL.pl")
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}

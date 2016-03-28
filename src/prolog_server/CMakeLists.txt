@@ -19,7 +19,7 @@ find_package(PkgConfig)
 pkg_check_modules(SWIPL REQUIRED swipl)
 
 find_program(SWIPL_EXECUTABLE swipl)
-add_definitions(-DSWIPL_EXECUTABLE="\\"${SWIPL_EXECUTABLE}\\"")
+add_definitions(-DSWIPL_EXECUTABLE="${SWIPL_EXECUTABLE}")
 
 catkin_package(
   INCLUDE_DIRS
@@ -36,6 +36,7 @@ catkin_package(
     roscpp_nodewrap
 )
 
+MESSAGE("INCLUDE DIRS:" ${catkin_INCLUDE_DIRS})
 include_directories(
   include
   ${SWIPL_INCLUDE_DIRS}

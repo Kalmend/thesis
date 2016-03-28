@@ -113,7 +113,7 @@ void Server::initProlog() {
   std::string ns = "prolog";
     
   std::string executable = getParam(ros::names::append(ns, "executable"),
-    context_.getExecutable());
+		  std::string(SWIPL_EXECUTABLE));
   size_t globalStack = getParam(ros::names::append(ns, "global_stack"),
     (int)context_.getGlobalStack());
   size_t localStack = getParam(ros::names::append(ns, "local_stack"),
