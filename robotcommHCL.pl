@@ -1,4 +1,3 @@
-encoding('UTF-8').
 :- dynamic cc0/1,cc1/1,cc2/1,cc2TXT/1,cc3/1,cc3TXT/1,ccx/1.
 :- dynamic world/5.
 
