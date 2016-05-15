@@ -130,7 +130,7 @@ private:
 	 */
 	std::string doQuery(const std::string& queryString);
 
-	std::string getCompoundSpeech(const std::string& rawInput);
+	std::string compoundAndExecute(const std::string& rawInput);
 	std::string getCommaSeparatedString(const std::string& rawInput);
 };
 }

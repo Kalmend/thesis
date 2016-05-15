@@ -109,8 +109,8 @@ void InteractiveClient::initChatCore()
 void InteractiveClient::onRawSpeech(const std_msgs::String &msg)
 {
 	ROS_INFO("heard raw speech:\n%s", msg.data.c_str());
-	std::string compounded = getCompoundSpeech(msg.data.c_str());
-	ROS_INFO("converted to compound speech: :\n%s", compounded.c_str());
+	std::string unparsed = compoundAndExecute(msg.data.c_str());
+	ROS_INFO("result:\n%s", unparsed.c_str());
 }
 
 
@@ -338,9 +338,9 @@ std::string InteractiveClient::doQuery(const std::string& queryString)
 	return ss.str();
 }
 
-std::string InteractiveClient::getCompoundSpeech(const std::string& rawInput)
+std::string InteractiveClient::compoundAndExecute(const std::string& rawInput)
 {
-	std::string queryString("filtreeri_liitsõnad([aja,kiri],B).");
+	std::string queryString("liitsõnadega_käsk([" + getCommaSeparatedString(rawInput) + "],A).");
 	return doQuery(queryString);
 
 }
@@ -349,6 +349,8 @@ std::string InteractiveClient::getCommaSeparatedString(const std::string& rawInp
 {
 	std::string commaDelimited = rawInput;
 	rtrim(commaDelimited);
+	std::transform(commaDelimited.begin(), commaDelimited.end(), commaDelimited.begin(), ::tolower);
+
     for(int i = 0; i < commaDelimited.length(); i++)
     {
            if( isspace(commaDelimited[i]) )

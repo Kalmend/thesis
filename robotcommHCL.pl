@@ -27,6 +27,7 @@ test1:-
 test1.
 
 %------------------------------------------
+liitsõnadega_käsk(A,C) :- filtreeri_liitsõnad(A,B), käsk(B,C).
 %----------------------------------------------- DCG Interpreteerimisreeglid -----------------------------------------------------
 käsk([juhata|_G2210],_G2221):-
 	update(cc3,[now]),update(cc3TXT,[esimesel,võimalusel]),
