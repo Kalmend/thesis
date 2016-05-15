@@ -19,10 +19,10 @@ find_package(Boost REQUIRED COMPONENTS thread)
 catkin_package()
 
 ## Build talker and listener
-include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${GST1.0_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${GST1.0_INCLUDE_DIRS} ${libgstreamer0.10-dev_DIRS})
 
 add_executable(capture_vad_speex src/capture_vad_speex.cpp)
-target_link_libraries(capture_vad_speex ${catkin_LIBRARIES} ${GST1.0_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(capture_vad_speex ${catkin_LIBRARIES} ${GST1.0_LIBRARIES} ${Boost_LIBRARIES} ${libgstreamer0.10-dev_LIBRARIES})
 add_dependencies(capture_vad_speex capture_vad_speex_generate_messages_cpp)
 
 install(TARGETS capture_vad_speex

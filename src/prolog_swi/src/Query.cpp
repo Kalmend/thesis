@@ -161,13 +161,8 @@ bool Query::Impl::open() {
     }
       
     if (!predicateHandle_) {
-      atom_t predicateAtom = PL_new_atom(predicate_.c_str());
-      functor_t predicateFunctor = PL_new_functor(predicateAtom,
-        arguments_.size());
-      
-      predicateHandle_ = PL_pred(predicateFunctor, moduleHandle_);
-      PL_unregister_atom(predicateAtom);
-      
+
+      predicateHandle_ = PL_predicate(predicate_.c_str(),arguments_.size(), module_.c_str());
       if (!predicateHandle_)
         throw Context::ResourceError();
     }
@@ -189,7 +184,7 @@ bool Query::Impl::open() {
         if (!arguments)
           throw Context::ResourceError();
         
-        PL_put_atom(arguments, PL_new_atom(atom.getName().c_str()));
+       PL_unify_chars(arguments, PL_STRING|REP_UTF8, -1, atom.getName().c_str());
         
         qid_t query = PL_open_query(NULL, PL_Q_CATCH_EXCEPTION,
           predicate, arguments);

@@ -14,6 +14,7 @@
 	command([anna,see, raamat,evelinile]).
 	command([võta, evelinilt, see, raamat]).
 	command([pane, tass, laua, peale]).
+	command([too,see,tass,laualt,evelinile]).
 	command([too,see,tass,evelinile,laualt]).
 	command([too,evelinile,laualt,tass]).
 	command([too,laualt,evelinile,tass]).
@@ -58,8 +59,8 @@ käsk([ole|_G2220],_G2231):-
 	reaction(ole),!.
 käsk([tule|_G2210],_G2221):-
 	update(cc3,[now]),update(cc3TXT,[esimesel,võimalusel]),
-	(viisimäärus1(_G2210,_G2312),update(cc3,[now]);ajamäärus(_G2210,_G2312);_G2210=_G2312),
-	(kohamäärus1(_G2312,_G2221);_G2312=_G2221),
+	(viisimäärus1(_G2210,_G2312);ajamäärus(_G2210,_G2312);_G2210=_G2312),
+	(kohamäärus1(_G2312,_G2221);isik_2(_G2312,_G2223),update(cc0,_G2312),kohamäärus3(_G2223,_G2221)),
 	(ajamäärus(_G2221,_G2222);_G2221=_G2222),
 	reaction(tule1),!.
 käsk([tule|_G2223],_G2234):-
@@ -121,9 +122,10 @@ käsk([A|_G2321],_G2332):-
 käsk([too|_G2261],_G2272):-
 	update(cc3,[now]),update(cc3TXT,[esimesel,võimalusel]),
 	(_G2261=[see|_G2466];_G2261=_G2466),
-	(objekt1(_G2466,_G2467),update(cc1,_G2466);_G2466=_G2467),
-	(asesõna_7(_G2467,_G2631);isik_7(_G2467,_G2631),update(cc0,_G2467);_G2467=_G2631),
+	(objekt1(_G2466,_G2631),update(cc1,_G2466);_G2466=_G2631),
 	(koht1_6(_G2631,_G2272);koht1_9(_G2631,_G2272),update(cc2,_G2631);_G2631=_G2272),
+	(asesõna_7(G2272,_G2632);isik_7(_G2272,_G2632),update(cc0,_G2272);_G2272=_G2632),
+	(koht1_6(_G2632,_G2273);koht1_9(_G2632,_G2273),update(cc2,_G2632);_G2632=_G2273),
 	reaction(too),!.
 käsk([too|_G2246],_G2257):-
 	update(cc3,[now]),update(cc3TXT,[esimesel,võimalusel]),
@@ -185,8 +187,8 @@ asesõna_7(_G2234,_G2245):-
 
 koht1_4(_G2209,_G2220):-
 	update(cc2TXT,_G2209),
-	(_G2209=[kohvituppa|_G2220],update(cc2,[kohvituba]);
-	_G2209=[koridori|_G2220],update(cc2,[koridor]);
+	(_G2209=[kohvituppa|_G2220],update(cc2,[kohvituba]),update(ccx,[kohvituba]);
+	_G2209=[koridori|_G2220],update(cc2,[koridor]),update(ccx,[koridor]);
 	_G2209=[tuppa,number|_G2372],room_number(_G2372,_G2220),retract(cc2TXT(T)),asserta(cc2TXT([tuppa|T]));
 	_G2209=[tuppa|_G2372],room_number(_G2372,_G2220),retract(cc2TXT(T)),asserta(cc2TXT([tuppa|T]))).
 koht1_5(_G2176,_G2187):-
@@ -283,33 +285,32 @@ kella_näit(_G2172,_G2183):-tund(_G2172,_G2203),minut(_G2203,_G2183).
 test:- kella_näit([null,null,viiskümmend,seitse],_),tundTXT(H),minutTXT(M),append(H,M,HM),write(HM),tund(HD),minut(MD),write([HD,MD]).
 
 tund([null,null|_G2504],_G2504):-	% 00:00-00:59
-	assert(tund(0)),assert(tundTXT([null,null])),!.
+	asserta(tund(0)),asserta(tundTXT([null,null])),!.
 tund([null,H2|_G2504],_G2504):-		% 01:00-09:59
 	arv(H2,D), D > 0, D =<9,
-	assert(tund(D)),assert(tundTXT([null,H2])),!.
+	asserta(tund(D)),asserta(tundTXT([null,H2])),!.
 tund([H1,H2|_G2504],_G2504):-		% 21:00-23:59
 	arv(H1,D1), D1 = 20,
 	arv(H2,D2), D2 >= 1, D2 =< 4,
 	D is D1 + D2,
-	assert(tund(D)),assert(tundTXT([H1,H2])),!.
+	asserta(tund(D)),asserta(tundTXT([H1,H2])),!.
 tund([H|_G2504],_G2504):-		% 1:00-20:59
 	arv(H,D), D >= 1, D =< 20,
-	assert(tund(D)),assert(tundTXT([H])),!.
+	asserta(tund(D)),asserta(tundTXT([H])),!.
 
 minut([null,null|_G2504],_G2504):-
-	assert(minut(0)),assert(minutTXT([null,null])),!.
+	asserta(minut(0)),asserta(minutTXT([null,null])),!.
 minut([null,M|_G2504],_G2504):-
 	arv(M,D), D>=0, D=<9,
-	assert(minut(D)),assert(minutTXT([null,M])),!.
+	asserta(minut(D)),asserta(minutTXT([null,M])),!.
 minut([M1,M2|_G2504],_G2504):-
 	arv(M1,D1), (D1=20;D1=30;D1=40;D1=50),
 	arv(M2,D2),  D2>=1, D2=<9,
 	D is D1 + D2,
-	assert(minut(D)),assert(minutTXT([M1,M2])),!.
+	asserta(minut(D)),asserta(minutTXT([M1,M2])),!.
 minut([M|_G2504],_G2504):-		% 1:00-20:59
 	arv(M,D), (D>=1, D=<20; D=30; D=40; D=50),
-	assert(minut(D)),assert(minutTXT([M])),!.
-
+	asserta(minut(D)),asserta(minutTXT([M])),!.
 
 arvsõna1(_G2189,_G2200):-_G2189=[üheksamkümmend|_G2200];_G2189=[sada|_G2286],_G2286=[kaheksakümmend|_G2200].
 
@@ -387,7 +388,7 @@ reaction(tule1):-
 	append([sain,aru,tulen],CC3TXT,Answer),
 	respond(Answer),
 	asserta(world(me,Idxme,Idx0,XYZQ0,CC3)),
-	goto(CC0,XYZQ0), wait(done),!.
+	goto(CC0Nim,XYZQ0), wait(done),!.
 reaction(tule2):-
 	cc2(CC2), cc3(CC3),
 	käände_vorm(CC2Nim,_,CC2),
@@ -487,7 +488,7 @@ reaction(liigu_mine):-
 	asserta(world(me,Idxme,Idx,XYZQ,TS)),!.
 reaction(A):-
 	respond([tegevus,A,ebaõnnestus,ootan, uut, korraldust]),nl.
-%------------------------------------------------------------------------------
+%---------------------------------- Liitsõnade moodustamine eraldi sõnadest--------------------------------------------
 filtreeri_liitsõnad([],[]):- !.
 filtreeri_liitsõnad(A,[S|B1]):-
 	tee_liitsõna(A,[S|B]),
@@ -571,7 +572,7 @@ world(lusikas,	id33,id43, (1,14,0,0,0,0,1),  0).
 world(nuga,     id34,id43, (1,14,0,0,0,0,1),  0).
 world(pall,     id35,id27, (1,14,0,0,0,0,1),  0).
 world(raamat,   id36,id29, (1,14,0,0,0,0,1),  0).
-world(sussid,   id37,id12, (1,14,0,0,0,0,1),  0).
+world(suss,   	id37,id12, (1,14,0,0,0,0,1),  0).
 world(pastakas,	id38,id12, (1,14,0,0,0,0,1),  0).
 world(väljatrükk,id39,id23, (1,14,0,0,0,0,1), 0).
 world(paber,	id40, id23, (1,14,0,0,0,0,1), 0).
@@ -605,7 +606,7 @@ world(paberihunt,id30, id11, (1,14,0,0,0,0,1), 0).
 world(uks,	 id31, id20, (1,14,0,0,0,0,1), 0).
 world(kapp,	 id43, id20, (1,14,0,0,0,0,1), 0).
 
-%------------------------ Grammatika -----------------------------
+%------------------------Käändsõnade grammatika -----------------------------
 käänded(inimene, [ns, _, elus], [inimene, inimese, inimest, inimesse, inimeses, inimesest, inimesele, inimesel, inimeselt, inimeseks, inimeseni, inimesena, inimeseta, inimesega, inimesed, inimeste, inimesi, inimestesse, inimestes, inimestest, inimestele, inimestel, inimestelt, inimesteks, inimesteni, inimestena, inimesteta, inimestega]).
 käänded(mees,  [ns, _, elus],  [mees, mehe, meest, mehesse, mehes, mehest, mehele, mehel, mehelt, meheks,  meheni,  mehena,  meheta, mehega,  mehed, meeste, mehi, meestesse, meestes, meestest, meestele, meestel, meestelt, meesteks, meesteni, meestena, meesteta, meestega]).
 käänded(naine, [ns, ains, elus], [naine, naise, naist, naisesse, naises, naisest, naisele, naisel, naiselt, naiseks, naiseni, naisena, naiseta, naisega, naised, naiste, naisi, naistesse, naistes, naistest, naistele, naistel, naistelt, naisteks, naisteni, naistena, naisteta, naistega]).
@@ -614,13 +615,19 @@ käänded(poiss, [ns, ains, elus], [poiss, poisi, poissi, poissi, poisis, poisis
 käänded(tüdruk, [ns, ains, elus], [tüdruk, tüdruku, tüdrukut, tüdrukusse, tüdrukus, tüdrukust, tüdrukule, tüdrukul, tüdrukult, tüdrukuks, tüdrukuni, tüdrukuna, tüdrukuta, tüdrukuga, tüdrukud, tüdrukute, tüdrukuid, tüdrukutesse, tüdrukutes, tüdrukutest, tüdrukutele, tüdrukutel, tüdrukutelt, tüdrukuteks, tüdrukuteni, tüdrukutena, tüdrukuteta, tüdrukutega]).
 käänded(külaline, [ns, ains, elus], [külaline, külalise, külalist, külalisse, külalises, külalisest, külalisele, külalisel, külaliselt,külaliseks, külaliseni,külalisena, külaliseta, külalisega, külalised, külaliste, külalisi, külalistesse, külalistes, evelinidest,külalistele, külalistel, külalistelt, külalisteks, külalisteni, külalistena, külalisteta, külalistega]).
 
-% ASEsõnaD -----------------
+% ASESÕNAD -----------------
 käänded(mina, [ns, ains, elus], [mina, minu, mind, minusse, minus, minust, minule, minul, minult, minuks, minuni, minuna,  minuta, minuga, minad, minade, minasid,  minadesse, minades, minadest, minadele, minadel, minadelt, minadeks, minadeni, minadena, minadeta, minadega]).
+käänded(ma, [ns, ains, elus], [ma, mu, mind, musse, mus, must, mule, mul, mult, muks, muni, muna,  muta, muga, mud, mude, musid,  mudesse, mudes, mudest, mudele, mudel, mudelt, mudeks, mudeni, mudena, mudeta, mudega]).
 käänded(sina, [ns, ains, elus], [sina, sinu, sind, sinusse, sinus, sinust, sinule, sinul, sinult, sinuks, sinuni, sinuna,  sinuta, sinuga, sinad, sinade, sinasid,  sinadesse, sinades, sinadest, sinadele, sinadel, sinadelt, sinadeks, sinadeni, sinadena, sinadeta, sinadega]).
+käänded(sa, [ns, ains, elus], [sa, su, sind, susse, sus, sust, sule, sul, sult, suks, suni, suna,  suta, suga, sud, sude, susid,  sudesse, sudes, sudest, sudele, sudel, sudelt, sudeks, sudeni, sudena, sudeta, sudega]).
 käänded(tema, [ns, ains, elus], [tema, tema, teda, temasse, temas, temast, temale, temal, temalt, temaks, temani, temana,  temata, temaga, temad, temade, sinasid,  temadesse, temades, temadest, temadele, temadel, temadelt, temadeks, temadeni, temadena, temadeta, temadega]).
+käänded(ta, [ns, ains, elus], [ta, tema, teda, tasse, tas, tast, talle, tal, talt, taks, tani, tana,  tata, taga, tad, tade, tasid,  tadesse, tades, tadest, tadele, tadel, tadelt, tadeks, tadeni, tadena, tadeta, tadega]).
 käänded(meie, [ns, mitm, elus], [meie, meie, meid, meiesse, meis, meist, meile, meil, meilt, meieks, meieni, meiena, meieta, meiega, meied, meiede, meiesid, meiedesse, meiedes, meiedest, meiedele, meiedel, meiedelt, meiedeks, meiedeni, meiedena, meiedeta, meiedega]).
+käänded(me, [ns, mitm, elus], [me, me, meid, meisse, meis, mest, meile, meil, meilt, meiks, meni, mena, meta, mega, med, meiede, mesid, medesse, medes, medest, medele, medel, medelt, medeks, medeni, medena, medeta, medega]).
 käänded(teie, [ns, mitm, elus], [teie, teie, teid, teiesse, teies, teiest, teile, teil, teilt, teieks, teieni, teiena, teieta, teiega, teied, teiede, teiesid, teiedesse, teiedes, teiedest, teiedele, teiedel, teiedelt, teiedeks, teiedeni, teiedena, teiedeta, teiedega]).
+käänded(te, [ns, mitm, elus], [te, teie, teid, teisse, teis, teist, teile, teil, teilt, teiks, teini, teina, teita, teiga, teid, teite, teisid, teidesse, teites, teitest, teitele, teitel, teitelt, teiteks, teiteni, teiedena, teiteta, teitega]).
 käänded(nemad, [ns, mitm, elus], [nemad, nende, neid, nendesse, nendes, nendest, nendele, nendel, nendelt, nendeks, nendeni, nendena, nendeta, nendega, nemad, nemade, nemasid, nemadesse, nemades, nemadest, nemadele, nemadel, nemadelt, nemadeks, nemadeni, nemadena, nemadeta, nemadega]).
+käänded(nad, [ns, mitm, elus], [nad, nende, neid, nendesse, nendes, nendest, nendele, nendel, nendelt, nendeks, nendeni, nendena, nendeta, nendega, nemad, nemade, nemasid, nemadesse, nemades, nemadest, nemadele, nemadel, nemadelt, nemadeks, nemadeni, nemadena, nemadeta, nemadega]).
 
 % NIMED ------------------
 käänded(evelin, [ns, ains, elus], [evelin, evelini, evelini, evelinisse, evelinis, evelinist, evelinile, evelinil, evelinilt, eveliniks, evelinini, evelinina, evelinita, eveliniga,evelinid, evelinide, eveline, evelinidesse, evelinides, evelinidest, evelinidele, evelinidel, evelinidelt, evelinideks, evelinideni, evelinidena, evelinideta, evelinidega]).
@@ -635,10 +642,13 @@ käänded(juhan, [ns, ains, elus], [juhan, juhani, juhanit, juhanisse,juhanis, j
 
 % ESEMED -----------------
 käänded(asi, [ns, ains, eluta], [asi, asja, asja, asjasse, asjas, asjast, asjale, asjal, asjalt, asjaks, asjani, asjana, asjata, asjaga, asjad, asjade, asju, asjadesse, asjades, asjadest, asjadele,	asjadel, asjadelt, asjadeks, asjadeni, asjadena, asjadeta, asjadega]).
-käänded(pall,  [ns, ains, eluta], [pall, palli, palli,  palli,  pallis,  pallist,  pallile,  pallil,  pallilt,  palliks,  pallini,  pallina,  pallita, palliga, pallid,  pallide,  pallisid,  pallidesse,  pallides,  pallidest,  pallidele,  pallidel,  pallidelt,  pallideks,  pallideni,  pallidena,  pallideta, pallidega]).
 käänded(tass,  [ns, ains, eluta], [tass, tassi, tassi,  tassi,  tassis,  tassist,  tassile,  tassil,  tassilt,  tassiks,  tassini,  tassina,  tassita, tassiga, tassid,  tasside,  tassisid,  tassidesse,  tassides,  tassidest,  tassidele,  tassidel,  tassidelt,  tassideks,  tassideni,  tassidena,  tassideta, tassidega]).
 käänded(lusikas,[ns, ains, eluta], [lusikas, lusika, lusikat,  lusikasse, lusikas, lusikast, lusikale, lusikal,lusikalt, lusikaks,lusikani, lusikana, lusikata, lusikaga, lusikad, lusikate,  lusikaid, lusikatesse, lusikates, lusikatest,lusikatele, lusikatel, lusikatelt, lusikateks, lusikateni, lusikatena, lusikateta, lusikatega]).
+käänded(nuga, [ns, ains, eluta], [nuga, noa, nuga, noasse, noas, noast, noale, noal, noalt, noaks, noani, noana, noata, noaga, noad, nugade, nuge, nugadesse, nugadedes, nugadedest, nugadedele, nugadel, nugadelt, nugadeks, nugadeni, nugadena, nugadeta, nugadega]).
+käänded(kahvel, [ns, ains, eluta], [kahvel, kahvli, kahvlit, kahvlisse, kahvlis, kahvlist, kahvlile, kahvlil, kahvlilt, kahvliks, kahvlini, kahvlina, kahvlita, kahvliga, kahvlid, kahvlite,kahvleid, kahvlitesse, kahvlites, kahvlitest, kahvlitele, kahvlitel, kahvlitelt, kahvliteks,kahvliteni,kahvlitena,kahvliteta, kahvlitega]).
 käänded(raamat,  [ns, ains, eluta], [raamat, raamatu, raamatut,  raamatusse, raamatus, raamatust, raamatule, raamatul,raamatult, raamatuks, raamatuni, raamatuna, raamatuta, raamatuga, raamatud, raamatute,  raamatuid, raamatutesse, raamatutes, raamatutest, raamatutele, raamatutel, raamatutelt, raamatuteks, raamatuteni, raamatutena, raamatuteta, raamatutega]).
+käänded(pall,  [ns, ains, eluta], [pall, palli, palli,  palli,  pallis,  pallist,  pallile,  pallil,  pallilt,  palliks,  pallini,  pallina,  pallita, palliga, pallid,  pallide,  pallisid,  pallidesse,  pallides,  pallidest,  pallidele,  pallidel,  pallidelt,  pallideks,  pallideni,  pallidena,  pallideta, pallidega]).
+
 
 %RUUMID-------------------
 käänded(ruum, [ns, ains, eluta], [ruum, ruumi, ruumi, ruumi, ruumis, ruumist, ruumile, ruumil, ruumilt, ruumiks, ruumini, ruumina, ruumita, ruumiga, ruumid, ruumide, ruume, ruumidesse,ruumides, ruumidest, ruumidele, ruumidel, ruumidelt, ruumideks, ruumideni, ruumidena, ruumideta, ruumidega]).
@@ -656,6 +666,8 @@ käänded(riiul,[ns, ains, eluta], [riiul, riiuli, riiulit, riiulisse, riiulis, 
 käänded(kapp, [ns, ains, eluta], [kapp, kapi, kappi, kappi, kapis, kapist, kapile, kapil, kapilt, kapiks, kapini, kapina,kapita,kapiga, kapid,kappide, kappe, kappidesse, kappides, kappidest, kappidele, kappidel,kappidelt, kappideks, kappideni, kappidena, kappideta, kappidega]).
 käänded(kohvimasin, [ns, ains, eluta], [kohvimasin,kohvimasina,kohvimasinat,kohvimasinasse, kohvimasinas, kohvimasinast, kohvimasinale,kohvimasinal,kohvimasinalt, kohvimasinaks, kohvimasinani,kohvimasinana,kohvimasinata,kohvimasinaga, kohvimasinad,kohvimasinate, kohvimasinaid, kohvimasinatesse,kohvimasinates, kohvimasinatest, kohvimasinatele, kohvimasinatel, kohvimasinatelt, kohvimasinateks, kohvimasinateni, kohvimasinatena, kohvimasinateta, kohvimasinatega]).
 käänded(masin, [ns, ains, eluta], [masin,masina,masinat,masinasse, masinas, masinast,masinale,masinal,masinalt, masinaks,masinani,masinana,masinata,masinaga, masinad,masinate, masinaid, masinatesse,masinates, masinatest, masinatele, masinatel, masinatelt, masinateks, masinateni, masinatena,masinateta, masinatega]).
+käänded(põrand, [ns, ains, eluta], [põrand,põranda,põrandat,põrandasse, põrandas, põrandast,põrandale,põrandal,põrandalt, põrandaks,põrandani,põrandana,põrandata,põrandaga, põrandad,põrandate, põrandaid, põrandatesse,põrandates, põrandatest, põrandatele, põrandatel, põrandatelt, põrandateks, põrandateni, põrandatena,põrandateta, põrandatega]).
+
 
 % Arvud
 käänded(teistkümmend,  [arvsonajärk,  ains, _], [teistkümmend, teistkümne, teistkümmet, teistkümnesse, teistkümnes, teistkümnest, teistkümnele,  teistkümnel,  teistkümnelt,  teistkümneks, teistkümneni, teistkümnena, teistkümneta, teistkümnega, teistkümned, teistkümnete, teistkümneid, teistkümnetesse, teistkümnetes, teistkümnetes, teistkümnetele,  teistkümnetel,  teistkümnetelt, teistkümneteks,  teistkümneteni,  teistkümnetena,  teistkümneteta,  teistkümnetega]).
