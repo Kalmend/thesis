@@ -44,6 +44,8 @@ private:
 		float beam;
 		float lattice_beam;
 		float chunk_length_s;
+		float acoustic_scale;
+		float traceback_period_in_secs;
 	} sr_arguments_;
 	//ROS stuff
 	ros::ServiceClient serviceClient_;

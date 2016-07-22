@@ -83,7 +83,7 @@ void SpeechRecognitionSimple::exitOnMainThread(const std::string &message, int c
 void SpeechRecognitionSimple::parseArguments()
 {
 	ros::param::param<string>("~dst", destination_type_, "appsink");
-	ros::param::param<bool>("~threaded_decoder", sr_arguments_.threaded_decoder, true);
+	ros::param::param<bool>("~threaded_decoder", sr_arguments_.threaded_decoder, false);
 	ros::param::param<bool>("~do_endpointing", sr_arguments_.do_endpointing, true);
 	ros::param::param<string>("~model_dir", sr_arguments_.model_dir, "error");
 
@@ -99,10 +99,12 @@ void SpeechRecognitionSimple::parseArguments()
 	ros::param::param<string>("~ivector_extraction_config", sr_arguments_.ivector_extraction_config, sr_arguments_.model_dir + "/conf/ivector_extractor.fixed.conf");
 	ros::param::param<string>("~ep_silence_phones", sr_arguments_.ep_silence_phones, "1:2:3:4:5:6:7:8:9:10");
 
-	ros::param::param<int>("~max_active", sr_arguments_.max_active, 7000);
-	ros::param::param<float>("~beam", sr_arguments_.beam, 11.0);
-	ros::param::param<float>("~lattice_beam", sr_arguments_.lattice_beam, 5.0);
+	ros::param::param<int>("~max_active", sr_arguments_.max_active, 10000);
+	ros::param::param<float>("~beam", sr_arguments_.beam, 10.0);
+	ros::param::param<float>("~lattice_beam", sr_arguments_.lattice_beam, 8.0);
 	ros::param::param<float>("~chunk_length_s", sr_arguments_.chunk_length_s, 0.2);
+	ros::param::param<float>("~acoustic_scale", sr_arguments_.acoustic_scale, 0.0833);
+	ros::param::param<float>("~traceback_period_in_secs", sr_arguments_.traceback_period_in_secs, 1.0);
 }
 
 GstElement* SpeechRecognitionSimple::getSpeechRecognition()
@@ -123,6 +125,9 @@ GstElement* SpeechRecognitionSimple::getSpeechRecognition()
 	g_object_set(G_OBJECT(recog), "do-endpointing", sr_arguments_.do_endpointing, NULL);
 	g_object_set(G_OBJECT(recog), "endpoint-silence-phones", sr_arguments_.ep_silence_phones.c_str(), NULL);
 	g_object_set(G_OBJECT(recog), "chunk-length-in-secs", sr_arguments_.chunk_length_s, NULL);
+	g_object_set(G_OBJECT(recog), "acoustic-scale", sr_arguments_.acoustic_scale, NULL);
+	g_object_set(G_OBJECT(recog), "traceback-period-in-secs", sr_arguments_.traceback_period_in_secs, NULL);
+
 	return recog;
 }
 
