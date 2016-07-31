@@ -7,8 +7,8 @@ similarity_treshold(0.7).	% Lexical similarity >= treshold
 %=================================================================
 :- dynamic input_filename/1.
 :- dynamic output_filename/1.
-input_filename('/home/oliver/thesis/catkin_ws/in.txt').
-output_filename('/home/oliver/thesis/catkin_ws/out.txt').
+input_filename('/home/oliver/thesis/catkin_ws/input.txt').
+output_filename('/home/oliver/thesis/catkin_ws/output.txt').
 
 do_change_input(Name) :-
     retractall(input_filename(_)),
@@ -35,25 +35,35 @@ t.
 %======================== SYNCHRONIZATION =====================================
 %--- incoming sync commands
 :- message_queue_create(wait_for_signal).
-is_task_in_progress() :- catch(thread_property(task_thread, status(running)), _, fail).
-is_task_alive() :- catch(thread_property(task_thread, _), _, fail).
-finish_current_task() :- is_task_alive() -> thread_join(task_thread,_); false.
-kill_current_task() :- 
+:- mutex_create(sync_mutex).
+
+%--- sync API
+is_task_in_progress() :- with_mutex(sync_mutex, do_is_task_in_progress()).
+is_task_alive() :- with_mutex(sync_mutex, do_is_task_alive()).
+finish_current_task() :- with_mutex(sync_mutex, do_finish_current_task()).
+kill_current_task() :- with_mutex(sync_mutex, do_kill_current_task()).
+signal_done() :- with_mutex(sync_mutex, do_signal_done()).
+are_files_free() :- with_mutex(sync_mutex, not(is_stream(input_file);is_stream(output_file))).
+
+%--- sync implementation
+do_is_task_in_progress() :- catch(thread_property(task_thread, status(running)), _, fail).
+do_is_task_alive() :- catch(thread_property(task_thread, _), _, fail).
+do_finish_current_task() :- is_task_alive() -> thread_join(task_thread,_); false.
+
+do_kill_current_task() :-
     is_task_in_progress() -> (thread_signal(task_thread, abort), finish_current_task()); 
     finish_current_task().
-
-signal_done() :- is_task_in_progress() -> thread_send_message(wait_for_signal, gotit) ; finish_current_task(), false.
-are_files_free() :- not(is_stream(input_file);is_stream(output_file)).
+do_signal_done() :- is_task_in_progress() -> thread_send_message(wait_for_signal, gotit) ; finish_current_task(), false.
 
 %--- outgoing sync commands
-wait(_):- thread_get_message(wait_for_signal, gotit),!.
+wait(_):- mutex_unlock(sync_mutex), thread_get_message(wait_for_signal, gotit),mutex_lock(sync_mutex),!.
 
 %======================== MAIN CALLABLE =====================================
 % To - variable showing output action file for commands to robot
 % From - variable showing input text file from speech recognition
 %----------------------------------------------------------------------------
 
-dialogue_ctrl(From, To) :- thread_create(dialogue_ctrl_task(From, To),_,[alias(task_thread)]).
+dialogue_ctrl(From, To) :- thread_create(with_mutex(sync_mutex,dialogue_ctrl_task(From, To)),_,[alias(task_thread)]).
 
 dialogue_ctrl_task(From, To):-
 	get_command(From, Text_in),							% read input command from file

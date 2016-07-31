@@ -22,7 +22,10 @@
 
 #ifndef ROS_PROLOG_CLIENT_INTERACTIVE_CLIENT_H
 #define ROS_PROLOG_CLIENT_INTERACTIVE_CLIENT_H
-
+#include <ros/ros.h>
+#include <actionlib/client/simple_action_client.h>
+#include <actionlib/client/terminal_state.h>
+#include <move_base_msgs/MoveBaseAction.h>
 #include <string>
 
 #include <boost/asio.hpp>
@@ -37,101 +40,69 @@ namespace prolog
 {
 namespace client
 {
-/** \brief Interactive Prolog client implementation
- */
+
 class InteractiveClient: public Client
 {
 public:
-	/** \brief Definition of the interactive Prolog client solution
-	 *   mode
-	 */
+
 	enum SolutionMode
 	{
 		FirstSolution, AllSolutions, IncrementalSolutions
 	};
 
-	/** \brief Default constructor
-	 */
 	InteractiveClient();
-
-	/** \brief Destructor
-	 */
 	virtual ~InteractiveClient();
 
 protected:
-	/** \brief Initialize the interactive Prolog client
-	 */
-	void init();
-
-	/** \brief Perform chat core initialization
-	 */
-	void initChatCore();
-
-	/** \brief Cleanup the interactive Prolog client
-	 */
-	void cleanup();
 
 	void onRawSpeech(const std_msgs::String &msg);
 
 private:
-	/** \brief The mode of this interactive Prolog client
-	 */
+	void init();
+	void initChatCore();
+	void initRobotCore();
+	void initInputOutput();
+	void cleanup();
+
+	void startInput();
+	void handleInput(const boost::system::error_code& error, size_t length);
+
+	//calls to prolog
+	std::string execute(const std::string& input);
+	std::string doQuery(const std::string& queryString);
+	void signalDone();
+
+	//calls to robot
+	void gotoDoneCb(const actionlib::SimpleClientGoalState& state,
+			const move_base_msgs::MoveBaseResultConstPtr &goal);
+	void gotoSend();
+
+	//helpers
+	std::string getCommaSeparatedString(std::string input) const;
+	std::string trimGarbage(std::string raw) const;
+	void toInput(const std::string& input);
+	void processOutput();
+	bool isResultSuccess(const std::string& res);
+
 	SolutionMode solutionMode_;
-
-	/** \brief The Prolog service client of this interactive
-	 *   Prolog client
-	 */
 	ServiceClient serviceClient_;
-
-	/** \brief The I/O service of this interactive Prolog client
-	 */
 	boost::asio::io_service ioService_;
-
-	/** \brief The I/O service thread of this interactive Prolog client
-	 */
 	boost::thread ioThread_;
-
-	/** \brief The input stream of this interactive Prolog client
-	 */
 	boost::asio::posix::stream_descriptor inputStream_;
-
-	/** \brief The input buffer of this interactive Prolog client
-	 */
 	boost::asio::streambuf inputBuffer_;
-
-	/** \brief The input column of this interactive Prolog client
-	 */
 	size_t inputColumn_;
-
-	/** \brief The query of this interactive Prolog client
-	 */
 	Query query_;
-
-	/** \brief The solutions of this interactive Prolog client
-	 */
 	QueryProxy queryProxy_;
-
-	/** \brief The solutions iterator of this interactive Prolog client
-	 */
 	QueryProxy::Iterator iterator_;
 
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_;
 
-	/** \brief Start console input
-	 */
-	void startInput();
+	std::string inputFile_;
+	std::string outputFile_;
 
-	/** \brief Handle console input
-	 */
-	void handleInput(const boost::system::error_code& error, size_t length);
+	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac_;
 
-	/** \brief doQuery
-	 */
-	std::string doQuery(const std::string& queryString);
-
-	std::string compoundAndExecute(const std::string& rawInput);
-	std::string getCommaSeparatedString(const std::string& rawInput);
 };
 }
 ;

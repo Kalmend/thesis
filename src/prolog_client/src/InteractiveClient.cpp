@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #include <prolog_serialization/PrologSerializer.h>
 
@@ -40,9 +41,13 @@ namespace prolog { namespace client {
 /*****************************************************************************/
 
 InteractiveClient::InteractiveClient() :
-  solutionMode_(IncrementalSolutions),
+  solutionMode_(AllSolutions),
   inputStream_(ioService_, dup(STDIN_FILENO)),
-  inputColumn_(0) {
+  inputColumn_(0),
+  inputFile_(""),
+  outputFile_(""),
+  ac_("goto", false)
+{
 }
 
 InteractiveClient::~InteractiveClient() {
@@ -82,6 +87,8 @@ void InteractiveClient::init()
 	{
 
 		initChatCore();
+		initRobotCore();
+		initInputOutput();
 		sub_ = getNodeHandle().subscribe("/recognition/raw_result", 10, &InteractiveClient::onRawSpeech, this);
 		std::cout << "Please enter your query after the prompt,\n";
 		std::cout << "or type 'halt.' to exit the client.\n";
@@ -94,25 +101,52 @@ void InteractiveClient::init()
 	{
 		std::cout << "Failure to contact the Prolog server.\n";
 		std::cout << "Has the Prolog server been launched?\n";
-
 		ros::shutdown();
 	}
 }
 
 void InteractiveClient::initChatCore()
 {
+	std::string coreFile = getParam(ros::names::append("prolog", "chat_core"),  std::string(CHAT_CORE));
+	std::string result = doQuery("ensure_loaded('" + coreFile + "').");
+	if(!isResultSuccess(result))
+	{
+		std::cout << "Failure to load chat core.\n";
+		std::cout << "Is swi-prolog up to date, supports \"->\"?\n";
+		ros::shutdown();
+	}
 
-	  std::string coreFile = getParam(ros::names::append("prolog", "chat_core"),  std::string(CHAT_CORE));
-	  doQuery("consult('" + coreFile + "').");
+}
+
+void InteractiveClient::initRobotCore()
+{
+/*
+	ROS_INFO("PrologRobotInterface: waiting for goto server.");
+	ac_.waitForServer(); //will wait for infinite time
+	ROS_INFO("PrologRobotInterface: done waiting for action servers.");*/
+}
+
+void InteractiveClient::initInputOutput()
+{
+	inputFile_ = getParam(ros::names::append("prolog", "input_file"),  std::string(INPUT_FILE));
+	outputFile_ = getParam(ros::names::append("prolog", "output_file"),  std::string(OUTPUT_FILE));
+	doQuery("kill_current_task.");
+    std::string resInput = doQuery("change_input_filename('" + inputFile_ + "').");
+    std::string resOutput = doQuery("change_output_filename('" + outputFile_ + "').");
+    if(!isResultSuccess(resInput) || !isResultSuccess(resOutput))
+   	{
+   		std::cout << "Could not set either input or output file location for swi-prolog server.\n";
+   		ros::shutdown();
+   	}
+
 }
 
 void InteractiveClient::onRawSpeech(const std_msgs::String &msg)
 {
-	ROS_INFO("heard raw speech:\n%s", msg.data.c_str());
-	std::string unparsed = compoundAndExecute(msg.data.c_str());
-	ROS_INFO("result:\n%s", unparsed.c_str());
+	ROS_INFO("PrologRobotInterface: raw speech: %s", msg.data.c_str());
+	std::string unparsed_result = execute(msg.data.c_str());
+	ROS_INFO("PrologRobotInterface: query result: %s", unparsed_result.c_str());
 }
-
 
 void InteractiveClient::cleanup() {
   ioService_.stop();
@@ -143,9 +177,24 @@ void InteractiveClient::handleInput(const boost::system::error_code& error,
     
     inputBuffer_.consume(length);
 
-    doQuery(queryString);
+    std::cout << doQuery(queryString);
     startInput();
   }
+}
+
+std::string InteractiveClient::execute(const std::string& rawInput)
+{
+	if(isResultSuccess(doQuery("is_task_in_progress.")))
+		return "job already in progress, ignoring!"; //we don't want to do anything if task already in progress
+
+	toInput(trimGarbage(rawInput));
+	std::string result = doQuery("t.");
+	toInput("");
+	if(!isResultSuccess(doQuery("is_task_in_progress.")) && isResultSuccess(doQuery("is_task_alive.")))
+		signalDone();
+
+	processOutput();
+	return result;
 }
 
 std::string InteractiveClient::doQuery(const std::string& queryString)
@@ -334,29 +383,84 @@ std::string InteractiveClient::doQuery(const std::string& queryString)
 	else
 		ss << "|    " << std::flush;
 
-	std::cout << ss.str();
 	return ss.str();
 }
 
-std::string InteractiveClient::compoundAndExecute(const std::string& rawInput)
+void InteractiveClient::signalDone()
 {
-	std::string queryString("liitsõnadega_käsk([" + getCommaSeparatedString(rawInput) + "],A).");
-	return doQuery(queryString);
-
+	doQuery("signal_done.");
 }
 
-std::string InteractiveClient::getCommaSeparatedString(const std::string& rawInput)
+//calls to robot
+void InteractiveClient::gotoDoneCb(
+		const actionlib::SimpleClientGoalState& state,
+		const move_base_msgs::MoveBaseResultConstPtr &result)
 {
-	std::string commaDelimited = rawInput;
-	rtrim(commaDelimited);
-	std::transform(commaDelimited.begin(), commaDelimited.end(), commaDelimited.begin(), ::tolower);
+	 ROS_INFO("PrologRobotInterface: goto finished: %s", state.toString().c_str());
+	 signalDone();
+}
 
-    for(int i = 0; i < commaDelimited.length(); i++)
+void InteractiveClient::gotoSend()
+{
+	  move_base_msgs::MoveBaseGoal goal;
+	  auto& pos = goal.target_pose.pose.position;
+	  pos.x = 10;
+	  pos.y = 20;
+	  ROS_INFO("PrologRobotInterface: goto(%.2f,%.2f) sending.",pos.x, pos.y);
+	  ac_.sendGoal(goal, boost::bind(&InteractiveClient::gotoDoneCb, this, _1, _2));
+}
+
+std::string InteractiveClient::getCommaSeparatedString(std::string input) const
+{
+	rtrim(input);
+	input = trimGarbage(input);
+	std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+
+    for(int i = 0; i < input.length(); i++)
     {
-           if( isspace(commaDelimited[i]) )
-        	   commaDelimited[i] = ',';
+           if( isspace(input[i]) )
+        	   input[i] = ',';
     }
-    return commaDelimited;
+    return input;
+}
+
+std::string InteractiveClient::trimGarbage(std::string raw) const
+{
+	rtrim(raw);
+	std::string garbage("++garbage++");
+	auto gSize = garbage.length();
+	auto pos = raw.find(garbage);
+	while(pos != std::string::npos)
+	{
+		//also check if next character is whitespace.
+		uint modifier = 0;
+		if(pos + gSize < raw.length() && std::isspace(raw[pos+gSize]))
+			modifier++;
+		raw.erase(pos,gSize + modifier);
+		pos = raw.find(garbage);
+	}
+	return raw;
+}
+
+void InteractiveClient::toInput(const std::string& input)
+{
+	  std::ofstream inputFile;
+	  inputFile.open(inputFile_.c_str(), std::ios::trunc);
+	  inputFile << input;
+	  inputFile.close();
+}
+
+void InteractiveClient::processOutput()
+{
+	gotoSend();
+}
+
+bool InteractiveClient::isResultSuccess(const std::string& res)
+{
+	if(res.find("true") != std::string::npos)
+		return true;
+	else
+		return false;
 }
 
 }}

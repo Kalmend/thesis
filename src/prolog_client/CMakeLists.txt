@@ -11,6 +11,7 @@ find_package(
     prolog_serialization
     roscpp
     roscpp_nodewrap
+    actionlib
 )
 
 catkin_package(
@@ -30,6 +31,16 @@ IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../HR_dialogue4.pl)
     message( FATAL_ERROR "Could not find chat core! missing "  ${CMAKE_SOURCE_DIR}/../HR_dialogue4.pl )
 ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../HR_dialogue4.pl)
 add_definitions(-DCHAT_CORE="${CMAKE_SOURCE_DIR}/../HR_dialogue4.pl")
+
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../input.txt)
+    file(WRITE ${CMAKE_SOURCE_DIR}/../input.txt)
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../input.txt)
+add_definitions(-DINPUT_FILE="${CMAKE_SOURCE_DIR}/../input.txt")
+
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../output.txt)
+    file(WRITE ${CMAKE_SOURCE_DIR}/../output.txt)
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../output.txt)
+add_definitions(-DOUTPUT_FILE="${CMAKE_SOURCE_DIR}/../output.txt")
 
 include_directories(
   include
