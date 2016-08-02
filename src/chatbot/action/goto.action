@@ -1,9 +1,0 @@
-# Define the goal
-uint32 x
-uint32 y
----
-# Define the result
-bool success
----
-# Define a feedback message
-uint32 state

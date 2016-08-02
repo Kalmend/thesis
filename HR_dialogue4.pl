@@ -40,7 +40,7 @@ t.
 %--- sync API
 is_task_in_progress() :- with_mutex(sync_mutex, do_is_task_in_progress()).
 is_task_alive() :- with_mutex(sync_mutex, do_is_task_alive()).
-finish_current_task() :- with_mutex(sync_mutex, do_finish_current_task()).
+cleanup_if_done() :- with_mutex(sync_mutex, do_cleanup_if_done()).
 kill_current_task() :- with_mutex(sync_mutex, do_kill_current_task()).
 signal_done() :- with_mutex(sync_mutex, do_signal_done()).
 are_files_free() :- with_mutex(sync_mutex, not(is_stream(input_file);is_stream(output_file))).
@@ -48,12 +48,12 @@ are_files_free() :- with_mutex(sync_mutex, not(is_stream(input_file);is_stream(o
 %--- sync implementation
 do_is_task_in_progress() :- catch(thread_property(task_thread, status(running)), _, fail).
 do_is_task_alive() :- catch(thread_property(task_thread, _), _, fail).
-do_finish_current_task() :- is_task_alive() -> thread_join(task_thread,_); false.
+do_cleanup_if_done() :- (not(is_task_in_progress()),is_task_alive()) -> thread_join(task_thread,_); false.
 
 do_kill_current_task() :-
-    is_task_in_progress() -> (thread_signal(task_thread, abort), finish_current_task()); 
-    finish_current_task().
-do_signal_done() :- is_task_in_progress() -> thread_send_message(wait_for_signal, gotit) ; finish_current_task(), false.
+    is_task_in_progress() -> (thread_signal(task_thread, abort), do_cleanup_if_done()); 
+    do_cleanup_if_done().
+do_signal_done() :- is_task_in_progress() -> thread_send_message(wait_for_signal, gotit) ; false.
 
 %--- outgoing sync commands
 wait(_):- mutex_unlock(sync_mutex), thread_get_message(wait_for_signal, gotit),mutex_lock(sync_mutex),!.
@@ -537,7 +537,7 @@ reaction(ToR, FromR,juhata):-
 	find_case(CC2Nim,_,CC2),
 	world(CC2Nim, Idx2, _, XYZQ2,_),
 	goto(ToR,CC2Nim,XYZQ2),  wait(FromR),		% käsk navisüsteemile
-	respond(ToR,['oleme kohal']),
+	respond(ToR,[oleme,kohal]),
 	retract(world(me,Idx,_, _,_)),
 	get_time(T1),
 	asserta(world(me,Idx,Idx2, XYZQ2,T1)),
@@ -656,9 +656,9 @@ reaction(ToR, FromR,too):-
 	pick(ToR,CC1,XYZQ1), wait(FromR),
 	find_case(CC0Nim,_,CC0),
 	world(CC0Nim,Idx0,_,XYZQ0,_),
-	goto(ToR,CC0Nim,XYZQ0),
+	goto(ToR,CC0Nim,XYZQ0), wait(FromR),
 	respond(ToR,[palun, võta,CC1]),
-	place_to(ToR,CC1, XYZQ0),
+	place_to(ToR,CC1, XYZQ0), wait(FromR),
 	retract(world(CC1,Idx1,_,_,_)),
 	get_time(TS),
 	asserta(world(CC1,Idx1,Idx0,XYZQ0,TS)),!.
@@ -713,25 +713,25 @@ update(Context,[Entity|_]):-		% Kontekstimuutuja värskendamine
 
 %============================= ROBOT COMMANDS =============================
 goto( ToR,Place,XYZQ):-			% mine positsioonile XYZQ
-	open( ToR, write, H2, [alias(output_file)]),
+	open( ToR, append, H2, [alias(output_file)]),
 	cc3(CC3),
 	write(H2,'GOTO: '), write(H2,[Place,with,coordinates,XYZQ,CC3]),nl(H2),
 	write('GOTO: '),    write([Place,with,coordinates,XYZQ,CC3]),nl,
 	close(H2),!.
 pick( ToR,Object,XYZQ):-		% objekti haaramine positsioonilt
-	open( ToR, write, H2, [alias(output_file)]),
+	open( ToR, append, H2, [alias(output_file)]),
 	write(H2,'PICK: '),  write(H2,[Object,from, XYZQ]), nl(H2),
 	write('PICK: '),     write([Object,from, XYZQ]),	nl,
 	close(H2),!.
 place_to( ToR, Object, XYZQ):-	% objekti asetamine positsioonile XYZQ
-	open( ToR, write, H2, [alias(output_file)]),
-	write(H2,'PUT TO PLACE: '), write(H2,[Object,to, XYZQ]),	nl(H2),
-	write('PUT TO PLACE: '),	 write([Object,to, XYZQ]),		nl,
+	open( ToR, append, H2, [alias(output_file)]),
+	write(H2,'PLACE: '), write(H2,[Object,to, XYZQ]),	nl(H2),
+	write('PLACE: '),	 write([Object,to, XYZQ]),		nl,
 	close(H2),!.
 respond( ToR, Text):-
-	open( ToR, write, H2, [alias(output_file)]),
-	write(H2,'TELLING: '), write(H2,Text),	nl(H2),
-	write('TELLING: '),	write(Text),	nl,
+	open( ToR, append, H2, [alias(output_file)]),
+	write(H2,'RESPOND: '), write(H2,Text),	nl(H2),
+	write('RESPOND: '),	write(Text),	nl,
 	close(H2),!.										% robot vastab lausega
 %============================= END ROBOT COMMANDS =============================
 

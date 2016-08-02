@@ -12,6 +12,7 @@ find_package(
     roscpp
     roscpp_nodewrap
     actionlib
+    chatbot
 )
 
 catkin_package(

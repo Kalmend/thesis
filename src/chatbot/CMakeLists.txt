@@ -7,7 +7,14 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   move_base_msgs
   actionlib
+  genmsg
 )
+
+## Declare ROS messages and services
+add_service_files(FILES Respond.srv)
+
+## Generate added messages and services
+generate_messages(DEPENDENCIES std_msgs)
 
 include(FindPkgConfig)
 find_package(PkgConfig)

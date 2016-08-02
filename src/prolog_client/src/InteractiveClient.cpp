@@ -1,32 +1,15 @@
-/******************************************************************************
- * Copyright (C) 2016 by Ralf Kaestner                                        *
- * ralf.kaestner@gmail.com                                                    *
- *                                                                            *
- * This program is free software; you can redistribute it and/or modify       *
- * it under the terms of the Lesser GNU General Public License as published by*
- * the Free Software Foundation; either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * This program is distributed in the hope that it will be useful,            *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the               *
- * Lesser GNU General Public License for more details.                        *
- *                                                                            *
- * You should have received a copy of the Lesser GNU General Public License   *
- * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
- ******************************************************************************/
+#include "prolog_client/InteractiveClient.h"
+#include <prolog_serialization/PrologSerializer.h>
+#include <prolog_client/Query.h>
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
-
-#include <prolog_serialization/PrologSerializer.h>
-
-#include <prolog_client/Query.h>
-
-#include "prolog_client/InteractiveClient.h"
-
+#include <iterator>
 #include <algorithm>
+#include <sstream>
+
+#include <chatbot/Respond.h>
 
 static inline std::string &rtrim(std::string &s) {
         s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
@@ -46,7 +29,10 @@ InteractiveClient::InteractiveClient() :
   inputColumn_(0),
   inputFile_(""),
   outputFile_(""),
-  ac_("goto", false)
+  gotoAc_("goto", false),
+  pickAc_("pick", false),
+  placeAc_("place", false),
+  respondSrv_(nh_.serviceClient<chatbot::Respond>("respond"))
 {
 }
 
@@ -120,10 +106,10 @@ void InteractiveClient::initChatCore()
 
 void InteractiveClient::initRobotCore()
 {
-/*
-	ROS_INFO("PrologRobotInterface: waiting for goto server.");
-	ac_.waitForServer(); //will wait for infinite time
-	ROS_INFO("PrologRobotInterface: done waiting for action servers.");*/
+
+	ROS_INFO("PrologRobotInterface: waiting for chatbot.");
+	respondSrv_.waitForExistence();
+	ROS_INFO("PrologRobotInterface: done waiting for chatbot.");
 }
 
 void InteractiveClient::initInputOutput()
@@ -138,7 +124,7 @@ void InteractiveClient::initInputOutput()
    		std::cout << "Could not set either input or output file location for swi-prolog server.\n";
    		ros::shutdown();
    	}
-
+    cleanOutput();
 }
 
 void InteractiveClient::onRawSpeech(const std_msgs::String &msg)
@@ -189,11 +175,7 @@ std::string InteractiveClient::execute(const std::string& rawInput)
 
 	toInput(trimGarbage(rawInput));
 	std::string result = doQuery("t.");
-	toInput("");
-	if(!isResultSuccess(doQuery("is_task_in_progress.")) && isResultSuccess(doQuery("is_task_alive.")))
-		signalDone();
-
-	processOutput();
+	handleOutput();
 	return result;
 }
 
@@ -386,6 +368,10 @@ std::string InteractiveClient::doQuery(const std::string& queryString)
 	return ss.str();
 }
 
+void InteractiveClient::cleanupThreadIfDone()
+{
+	doQuery("cleanup_if_done.");
+}
 void InteractiveClient::signalDone()
 {
 	doQuery("signal_done.");
@@ -398,16 +384,64 @@ void InteractiveClient::gotoDoneCb(
 {
 	 ROS_INFO("PrologRobotInterface: goto finished: %s", state.toString().c_str());
 	 signalDone();
+	 handleOutput();
 }
 
-void InteractiveClient::gotoSend()
+void InteractiveClient::gotoSend(float x, float y)
 {
 	  move_base_msgs::MoveBaseGoal goal;
 	  auto& pos = goal.target_pose.pose.position;
-	  pos.x = 10;
-	  pos.y = 20;
+	  pos.x = x;
+	  pos.y = y;
 	  ROS_INFO("PrologRobotInterface: goto(%.2f,%.2f) sending.",pos.x, pos.y);
-	  ac_.sendGoal(goal, boost::bind(&InteractiveClient::gotoDoneCb, this, _1, _2));
+	  gotoAc_.sendGoal(goal, boost::bind(&InteractiveClient::gotoDoneCb, this, _1, _2));
+}
+
+void InteractiveClient::pickDoneCb(
+		const actionlib::SimpleClientGoalState& state,
+		const move_base_msgs::MoveBaseResultConstPtr &result)
+{
+	 ROS_INFO("PrologRobotInterface: pick finished: %s", state.toString().c_str());
+	 signalDone();
+	 handleOutput();
+}
+
+void InteractiveClient::pickSend(float x, float y)
+{
+	  move_base_msgs::MoveBaseGoal goal;
+	  auto& pos = goal.target_pose.pose.position;
+	  pos.x = x;
+	  pos.y = y;
+	  ROS_INFO("PrologRobotInterface: pick(%.2f,%.2f) sending.",pos.x, pos.y);
+	  pickAc_.sendGoal(goal, boost::bind(&InteractiveClient::pickDoneCb, this, _1, _2));
+}
+
+void InteractiveClient::placeDoneCb(
+		const actionlib::SimpleClientGoalState& state,
+		const move_base_msgs::MoveBaseResultConstPtr &result)
+{
+	 ROS_INFO("PrologRobotInterface: place finished: %s", state.toString().c_str());
+	 signalDone();
+	 handleOutput();
+}
+
+void InteractiveClient::placeSend(float x, float y)
+{
+	  move_base_msgs::MoveBaseGoal goal;
+	  auto& pos = goal.target_pose.pose.position;
+	  pos.x = x;
+	  pos.y = y;
+	  ROS_INFO("PrologRobotInterface: place(%.2f,%.2f) sending.",pos.x, pos.y);
+	  placeAc_.sendGoal(goal, boost::bind(&InteractiveClient::placeDoneCb, this, _1, _2));
+}
+
+void InteractiveClient::respondSend(const std::string & response)
+{
+	chatbot::Respond res;
+	res.request.str = response;
+	ROS_INFO("PrologRobotInterface: respond sending: %s.", response.c_str());
+	respondSrv_.call(res);
+	ROS_INFO("PrologRobotInterface: respond done.");
 }
 
 std::string InteractiveClient::getCommaSeparatedString(std::string input) const
@@ -442,6 +476,21 @@ std::string InteractiveClient::trimGarbage(std::string raw) const
 	return raw;
 }
 
+std::string InteractiveClient::convertToSentence(const std::vector<std::string>& words) const
+{
+
+	std::ostringstream oss;
+	if (!words.empty())
+	{
+	  // Convert all but the last element to avoid a trailing ","
+		std::copy(words.begin(), words.end()-1, std::ostream_iterator<std::string>(oss, " "));
+
+	    // Now add the last element with no delimiter
+	    oss << words.back();
+	}
+	return oss.str();
+}
+
 void InteractiveClient::toInput(const std::string& input)
 {
 	  std::ofstream inputFile;
@@ -450,9 +499,62 @@ void InteractiveClient::toInput(const std::string& input)
 	  inputFile.close();
 }
 
-void InteractiveClient::processOutput()
+void InteractiveClient::parseOutput()
 {
-	gotoSend();
+	  std::ifstream f(outputFile_);
+	  std::string line;
+	  while (std::getline(f, line))
+	  {
+		  std::string command = line.substr(0, line.find_first_of(" \t")-1); // throw away ':'
+		  std::string arguments = line.substr(line.find_first_of(" \t")+1);
+		  std::vector<std::string> vecArgs = parseArguments(arguments);
+		  if(command == "GOTO")
+		  {
+			  gotoSend(std::strtof(vecArgs[3].c_str(),NULL), std::strtof(vecArgs[4].c_str(),NULL));
+		  } else if(command == "PICK")
+		  {
+			  pickSend(std::strtof(vecArgs[2].c_str(),NULL), std::strtof(vecArgs[3].c_str(),NULL));
+		  } else if(command == "PLACE")
+		  {
+			  placeSend(std::strtof(vecArgs[2].c_str(),NULL), std::strtof(vecArgs[3].c_str(),NULL));
+		  } else if(command == "RESPOND")
+		  {
+			  respondSend(convertToSentence(vecArgs));
+		  }
+		  else
+		  {
+			  ROS_ERROR("PrologRobotInterface: Unknown command from prolog: %s", line.c_str());
+		  }
+	  }
+}
+
+std::vector<std::string> InteractiveClient::parseArguments(const std::string& arguments) const
+{
+	std::vector<std::string> result;
+	std::stringstream ss(arguments);
+
+	while( ss.good() )
+	{
+	    std::string word;
+	    std::getline( ss, word, ',' );
+	    word.erase(std::remove_if(word.begin(), word.end(), [](char c) {return c == '(' || c == ')' || c == ' ' || c == '[' || c == ']';}), word.end());
+	    result.push_back(word);
+	}
+	return result;
+}
+
+void InteractiveClient::cleanOutput()
+{
+	std::ofstream outputFile;
+	outputFile.open(outputFile_.c_str(), std::ios::trunc);
+	outputFile.close();
+}
+
+void InteractiveClient::handleOutput()
+{
+	cleanupThreadIfDone();
+	parseOutput();
+	cleanOutput();
 }
 
 bool InteractiveClient::isResultSuccess(const std::string& res)

@@ -1,32 +1,10 @@
-/******************************************************************************
- * Copyright (C) 2016 by Ralf Kaestner                                        *
- * ralf.kaestner@gmail.com                                                    *
- *                                                                            *
- * This program is free software; you can redistribute it and/or modify       *
- * it under the terms of the Lesser GNU General Public License as published by*
- * the Free Software Foundation; either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * This program is distributed in the hope that it will be useful,            *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the               *
- * Lesser GNU General Public License for more details.                        *
- *                                                                            *
- * You should have received a copy of the Lesser GNU General Public License   *
- * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
- ******************************************************************************/
-
-/** \file InteractiveClient.h
- * \brief Header file providing the InteractiveClient class interface
- */
-
-#ifndef ROS_PROLOG_CLIENT_INTERACTIVE_CLIENT_H
-#define ROS_PROLOG_CLIENT_INTERACTIVE_CLIENT_H
+#pragma once
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <string>
+#include <vector>
 
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
@@ -71,17 +49,31 @@ private:
 	std::string execute(const std::string& input);
 	std::string doQuery(const std::string& queryString);
 	void signalDone();
+	void cleanupThreadIfDone();
 
 	//calls to robot
 	void gotoDoneCb(const actionlib::SimpleClientGoalState& state,
-			const move_base_msgs::MoveBaseResultConstPtr &goal);
-	void gotoSend();
+			const move_base_msgs::MoveBaseResultConstPtr& goal);
+	void gotoSend(float x, float y);
 
-	//helpers
+	void pickDoneCb(const actionlib::SimpleClientGoalState& state,
+			const move_base_msgs::MoveBaseResultConstPtr& goal);
+	void pickSend(float x, float y);
+
+	void placeDoneCb(const actionlib::SimpleClientGoalState& state,
+			const move_base_msgs::MoveBaseResultConstPtr& goal);
+	void placeSend(float x, float y);
+	void respondSend(const std::string & response);
+
+	//helpers and file handling
 	std::string getCommaSeparatedString(std::string input) const;
-	std::string trimGarbage(std::string raw) const;
+	std::string trimGarbage(std::string  raw) const;
+	std::string convertToSentence(const std::vector<std::string>& words) const;
 	void toInput(const std::string& input);
-	void processOutput();
+	void parseOutput();
+	std::vector<std::string> parseArguments(const std::string& arguments) const;
+	void cleanOutput();
+	void handleOutput();
 	bool isResultSuccess(const std::string& res);
 
 	SolutionMode solutionMode_;
@@ -101,12 +93,13 @@ private:
 	std::string inputFile_;
 	std::string outputFile_;
 
-	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac_;
+	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> gotoAc_;
+	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> pickAc_;
+	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> placeAc_;
+	ros::ServiceClient respondSrv_;
 
 };
 }
 ;
 }
 ;
-
-#endif
