@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   move_base_msgs
   actionlib
   genmsg
+  message_generation
 )
 
 ## Declare ROS messages and services
