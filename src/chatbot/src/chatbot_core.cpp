@@ -7,7 +7,8 @@ using namespace std;
 ChatCore::ChatCore() :
 	gotoAs_(nh_, "goto", boost::bind(&ChatCore::executeGotoCB, this, _1), false),
 	pickAs_(nh_, "pick", boost::bind(&ChatCore::executePickCB, this, _1), false),
-	placeAs_(nh_, "place", boost::bind(&ChatCore::executePlaceCB, this, _1), false)
+	placeAs_(nh_, "place", boost::bind(&ChatCore::executePlaceCB, this, _1), false),
+	gotoAc_(nh_, "move_base", false)
 {
 	gotoAs_.start();
 	pickAs_.start();
@@ -34,9 +35,15 @@ void ChatCore::executeGotoCB(const move_base_msgs::MoveBaseGoalConstPtr &goal)
         gotoAs_.setPreempted();
         success = false;
     }
-    ros::Duration(20).sleep();
 
-    if(success)
+    while(!gotoAc_.waitForServer(ros::Duration(5.0)))
+      ROS_INFO("Goto received, but no move_base server. Waiting for the move_base action server to come up");
+
+    ROS_INFO("Sending goal");
+    gotoAc_.sendGoal(*goal);
+    gotoAc_.waitForResult();
+
+    if(success && gotoAc_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("ChatCore: goto completed!");
   	  move_base_msgs::MoveBaseResult res;

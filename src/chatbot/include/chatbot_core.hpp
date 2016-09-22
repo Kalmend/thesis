@@ -1,6 +1,7 @@
 using namespace std;
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
+#include <actionlib/client/simple_action_client.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include "chatbot/Respond.h"
 
@@ -20,5 +21,6 @@ protected:
 	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> gotoAs_;
 	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> pickAs_;
 	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> placeAs_;
+	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> gotoAc_;
 	ros::ServiceServer respondSrv_;
 };

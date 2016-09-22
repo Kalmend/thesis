@@ -393,6 +393,8 @@ void InteractiveClient::gotoSend(float x, float y)
 	  auto& pos = goal.target_pose.pose.position;
 	  pos.x = x;
 	  pos.y = y;
+	  goal.target_pose.pose.orientation.w = 1.0;
+	  goal.target_pose.header.frame_id = "map";
 	  ROS_INFO("PrologRobotInterface: goto(%.2f,%.2f) sending.",pos.x, pos.y);
 	  gotoAc_.sendGoal(goal, boost::bind(&InteractiveClient::gotoDoneCb, this, _1, _2));
 }
