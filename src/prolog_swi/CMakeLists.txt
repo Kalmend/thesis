@@ -13,6 +13,11 @@ find_package(
 find_package(PkgConfig)
 pkg_check_modules(SWIPL REQUIRED swipl)
 
+#Bug in latest swi-prolog metadata sets the wrong path. lets check and fix:
+MESSAGE( STATUS "SWI-prolog.h include before fix:" ${SWIPL_INCLUDE_DIRS} )
+string(REPLACE prlog prolog SWIPL_INCLUDE_DIRS ${SWIPL_INCLUDE_DIRS})
+MESSAGE( STATUS "SWI-prolog.h include after fix:" ${SWIPL_INCLUDE_DIRS} )
+
 find_program(SWIPL_EXECUTABLE swipl)
 add_definitions(-DSWIPL_EXECUTABLE="\\"${SWIPL_EXECUTABLE}\\"")
 

@@ -16,6 +16,7 @@ static inline std::string &rtrim(std::string &s) {
         return s;
 }
 
+static const std::string input_prefix = "raw:";
 
 namespace prolog { namespace client {
 
@@ -32,7 +33,9 @@ InteractiveClient::InteractiveClient() :
   gotoAc_("goto", false),
   pickAc_("pick", false),
   placeAc_("place", false),
-  respondSrv_(nh_.serviceClient<chatbot::Respond>("respond"))
+  respondSrv_(nh_.serviceClient<chatbot::Respond>("respond")),
+  stubTimer_(nh_.createTimer(ros::Duration(0.1), &InteractiveClient::stubCb, this, true, false)),
+  actionInProgress_(false)
 {
 }
 
@@ -73,20 +76,19 @@ void InteractiveClient::init()
 	{
 
 		initChatCore();
-		initRobotCore();
 		initInputOutput();
 		sub_ = getNodeHandle().subscribe("/recognition/raw_result", 10, &InteractiveClient::onRawSpeech, this);
-		std::cout << "Please enter your query after the prompt,\n";
-		std::cout << "or type 'halt.' to exit the client.\n";
+		std::cout << "Subscribed to /recognition/raw_result for input." << std::endl;
+		std::cout << "Type prolog queries here." << std::endl;
+		std::cout << "Or use the prefix \"raw:\" to simulate ROS msg." << std::endl;;
+		std::cout << "Use 'halt.' to exit the client." << std::endl;
 		std::cout << "\n";
-		std::cout << "?- " << std::flush;
-
 		startInput();
 	}
 	else
 	{
-		std::cout << "Failure to contact the Prolog server.\n";
-		std::cout << "Has the Prolog server been launched?\n";
+		ROS_ERROR("PrologRobotInterface::init: Failure to contact the Prolog server.");
+		ROS_ERROR("PrologRobotInterface::init: Has the Prolog server been launched?");
 		ros::shutdown();
 	}
 }
@@ -97,19 +99,11 @@ void InteractiveClient::initChatCore()
 	std::string result = doQuery("ensure_loaded('" + coreFile + "').");
 	if(!isResultSuccess(result))
 	{
-		std::cout << "Failure to load chat core.\n";
-		std::cout << "Is swi-prolog up to date, supports \"->\"?\n";
+		ROS_ERROR("PrologRobotInterface::initChatCore: Failure to load chat core.");
+		ROS_ERROR("PrologRobotInterface::initChatCore: Is swi-prolog up to date, supports \"->\"?");
 		ros::shutdown();
 	}
 
-}
-
-void InteractiveClient::initRobotCore()
-{
-
-	ROS_INFO("PrologRobotInterface: waiting for chatbot.");
-	respondSrv_.waitForExistence();
-	ROS_INFO("PrologRobotInterface: done waiting for chatbot.");
 }
 
 void InteractiveClient::initInputOutput()
@@ -121,7 +115,7 @@ void InteractiveClient::initInputOutput()
     std::string resOutput = doQuery("change_output_filename('" + outputFile_ + "').");
     if(!isResultSuccess(resInput) || !isResultSuccess(resOutput))
    	{
-   		std::cout << "Could not set either input or output file location for swi-prolog server.\n";
+    	ROS_ERROR("PrologRobotInterface::initInputOutput: Could not set either input or output file location for swi-prolog server.");
    		ros::shutdown();
    	}
     cleanOutput();
@@ -129,9 +123,9 @@ void InteractiveClient::initInputOutput()
 
 void InteractiveClient::onRawSpeech(const std_msgs::String &msg)
 {
-	ROS_INFO("PrologRobotInterface: raw speech: %s", msg.data.c_str());
+	ROS_INFO("PrologRobotInterface::onRawSpeech: %s", msg.data.c_str());
 	std::string unparsed_result = execute(msg.data.c_str());
-	ROS_INFO("PrologRobotInterface: query result: %s", unparsed_result.c_str());
+	ROS_INFO("PrologRobotInterface::onRawSpeech: query result: %s", unparsed_result.c_str());
 }
 
 void InteractiveClient::cleanup() {
@@ -143,13 +137,13 @@ void InteractiveClient::cleanup() {
 void InteractiveClient::startInput() {
   ioService_.reset();
   
+  std::cout << "?-" << std::flush;
   boost::asio::async_read_until(inputStream_, inputBuffer_, '\n',
-    boost::bind(&InteractiveClient::handleInput, this,
-      boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred));
+	boost::bind(&InteractiveClient::handleInput, this,
+	boost::asio::placeholders::error,
+	boost::asio::placeholders::bytes_transferred));
   
-  ioThread_ = boost::thread(boost::bind(&boost::asio::io_service::run,
-    &ioService_));
+  ioThread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &ioService_));
 }
 
 void InteractiveClient::handleInput(const boost::system::error_code& error,
@@ -163,7 +157,22 @@ void InteractiveClient::handleInput(const boost::system::error_code& error,
     
     inputBuffer_.consume(length);
 
-    std::cout << doQuery(queryString);
+	if(queryString.compare(0, input_prefix.length(), input_prefix) == 0)
+	{
+		std_msgs::String rosString;
+		rosString.data = queryString.substr(input_prefix.length());
+		onRawSpeech(rosString);
+	}
+	else
+	{
+		std::cout << "prolog:" << doQuery(queryString) << std::endl;
+		std::string fileOutput = getOutput();
+		if(fileOutput.length())
+		{
+			std::cout << "output_file:" << std::endl;
+			std::cout << fileOutput << std::endl;
+		}
+	}
     startInput();
   }
 }
@@ -184,64 +193,10 @@ std::string InteractiveClient::doQuery(const std::string& queryString)
 	std::stringstream ss;
 	if (query_.isOpen())
 	{
-		if (queryString == ".")
-		{
-			queryProxy_ = QueryProxy();
-			iterator_ = QueryProxy::Iterator();
-
-			ss << "?- " << std::flush;
-		}
-		else if (iterator_ != queryProxy_.end())
-		{
-			ss << "\x1B[A";
-			if (inputColumn_)
-				ss << "\x1B[" << inputColumn_ << "C";
-			ss << ";\x1B[K\n";
-
-			if (!iterator_->isEmpty())
-			{
-				std::ostringstream stream;
-
-				serialization::PrologSerializer serializer;
-				serializer.serializeBindings(stream, iterator_->getBindings());
-
-				size_t pos = stream.str().rfind('\n');
-
-				if (pos != std::string::npos)
-					inputColumn_ = stream.str().length() - pos - 1;
-				else
-					inputColumn_ = stream.str().length();
-
-				ss << stream.str() << std::flush;
-			}
-			else
-			{
-				inputColumn_ = 4;
-				ss << "true" << std::flush;
-			}
-
-			++iterator_;
-
-			if (iterator_ == queryProxy_.end())
-			{
-				queryProxy_ = QueryProxy();
-				iterator_ = QueryProxy::Iterator();
-
-				ss << ".\n?- " << std::flush;
-			}
-			else
-				ss << " " << std::flush;
-		}
-		else
-		{
-			queryProxy_ = QueryProxy();
-			iterator_ = QueryProxy::Iterator();
-
-			ss << ".\n?- " << std::flush;
-		}
+		ROS_ERROR("PrologRobotInterface::doQuery: Previous query still open!");
+		ros::shutdown();
 	}
-	else if (!queryString.empty()
-			&& (queryString[queryString.length() - 1] == '.'))
+	else if (!queryString.empty() && (queryString[queryString.length() - 1] == '.'))
 	{
 		if (queryString == "halt.")
 		{
@@ -270,8 +225,7 @@ std::string InteractiveClient::doQuery(const std::string& queryString)
 						ss << "true";
 					else
 						ss << "false";
-
-					ss << ".\n?- " << std::flush;
+					query_.close();
 				}
 				else if (solutionMode_ == AllSolutions)
 				{
@@ -297,8 +251,6 @@ std::string InteractiveClient::doQuery(const std::string& queryString)
 					}
 					else
 						ss << "false";
-
-					ss << ".\n?- " << std::flush;
 				}
 				else
 				{
@@ -378,72 +330,151 @@ void InteractiveClient::signalDone()
 }
 
 //calls to robot
+void InteractiveClient::stubCb(const ros::TimerEvent& event)
+{
+	if(!actionInProgress_)
+	{
+		ROS_ERROR("PrologRobotInterface::stubCb: action not in progress. aborting!");
+		ros::shutdown();
+	}
+	actionInProgress_ = false;
+	ROS_WARN("PrologRobotInterface::stubCb() fired!");
+	signalDone();
+	handleOutput();
+}
+
 void InteractiveClient::gotoDoneCb(
 		const actionlib::SimpleClientGoalState& state,
 		const move_base_msgs::MoveBaseResultConstPtr &result)
 {
-	 ROS_INFO("PrologRobotInterface: goto finished: %s", state.toString().c_str());
-	 signalDone();
-	 handleOutput();
+	if(!actionInProgress_)
+	{
+		ROS_ERROR("PrologRobotInterface::gotoDoneCb: action not in progress. aborting!");
+		ros::shutdown();
+	}
+	actionInProgress_ = false;
+	ROS_INFO("PrologRobotInterface::gotoDoneCb: %s", state.toString().c_str());
+	signalDone();
+	handleOutput();
 }
 
 void InteractiveClient::gotoSend(float x, float y)
 {
-	  move_base_msgs::MoveBaseGoal goal;
-	  auto& pos = goal.target_pose.pose.position;
-	  pos.x = x;
-	  pos.y = y;
-	  goal.target_pose.pose.orientation.w = 1.0;
-	  goal.target_pose.header.frame_id = "map";
-	  ROS_INFO("PrologRobotInterface: goto(%.2f,%.2f) sending.",pos.x, pos.y);
-	  gotoAc_.sendGoal(goal, boost::bind(&InteractiveClient::gotoDoneCb, this, _1, _2));
+	if(actionInProgress_)
+	{
+		ROS_ERROR("PrologRobotInterface::gotoSend: another action was in progress. aborting !");
+		ros::shutdown();
+	}
+	actionInProgress_ = true;
+	if(!gotoAc_.isServerConnected())
+	{
+		ROS_WARN("PrologRobotInterface::gotoSend: server not connected, scheduling stub.");
+		stubTimer_.stop();
+		stubTimer_.setPeriod(ros::Duration(10));
+		stubTimer_.start();
+		return;
+	}
+	move_base_msgs::MoveBaseGoal goal;
+	auto& pos = goal.target_pose.pose.position;
+	pos.x = x;
+	pos.y = y;
+	goal.target_pose.pose.orientation.w = 1.0;
+	goal.target_pose.header.frame_id = "map";
+	ROS_INFO("PrologRobotInterface:gotoSend: [%.2f,%.2f] sending.", pos.x, pos.y);
+	gotoAc_.sendGoal(goal, boost::bind(&InteractiveClient::gotoDoneCb, this, _1, _2));
 }
 
 void InteractiveClient::pickDoneCb(
 		const actionlib::SimpleClientGoalState& state,
 		const move_base_msgs::MoveBaseResultConstPtr &result)
 {
-	 ROS_INFO("PrologRobotInterface: pick finished: %s", state.toString().c_str());
-	 signalDone();
-	 handleOutput();
+	if(!actionInProgress_)
+	{
+		ROS_ERROR("PrologRobotInterface::pickDoneCb: action not in progress. aborting!");
+		ros::shutdown();
+	}
+	actionInProgress_ = false;
+	ROS_INFO("PrologRobotInterface::pickDoneCb: %s", state.toString().c_str());
+	signalDone();
+	handleOutput();
 }
 
 void InteractiveClient::pickSend(float x, float y)
 {
-	  move_base_msgs::MoveBaseGoal goal;
-	  auto& pos = goal.target_pose.pose.position;
-	  pos.x = x;
-	  pos.y = y;
-	  ROS_INFO("PrologRobotInterface: pick(%.2f,%.2f) sending.",pos.x, pos.y);
-	  pickAc_.sendGoal(goal, boost::bind(&InteractiveClient::pickDoneCb, this, _1, _2));
+	if(actionInProgress_)
+	{
+		ROS_ERROR("PrologRobotInterface::pickSend: another action was in progress. aborting !");
+		ros::shutdown();
+	}
+	actionInProgress_ = true;
+	if(!pickAc_.isServerConnected())
+	{
+		ROS_WARN("PrologRobotInterface::pickSend: action server not connected, scheduling stub.");
+		stubTimer_.stop();
+		stubTimer_.setPeriod(ros::Duration(5));
+		stubTimer_.start();
+		return;
+	}
+	move_base_msgs::MoveBaseGoal goal;
+	auto& pos = goal.target_pose.pose.position;
+	pos.x = x;
+	pos.y = y;
+	ROS_INFO("PrologRobotInterface::pickSend: [%.2f,%.2f] sending.", pos.x, pos.y);
+	pickAc_.sendGoal(goal, boost::bind(&InteractiveClient::pickDoneCb, this, _1, _2));
 }
 
 void InteractiveClient::placeDoneCb(
 		const actionlib::SimpleClientGoalState& state,
 		const move_base_msgs::MoveBaseResultConstPtr &result)
 {
-	 ROS_INFO("PrologRobotInterface: place finished: %s", state.toString().c_str());
-	 signalDone();
-	 handleOutput();
+	if(!actionInProgress_)
+	{
+		ROS_ERROR("PrologRobotInterface::placeDoneCb: action not in progress. aborting!");
+		ros::shutdown();
+	}
+	actionInProgress_ = false;
+	ROS_INFO("PrologRobotInterface::placeDoneCb: %s", state.toString().c_str());
+	signalDone();
+	handleOutput();
 }
 
 void InteractiveClient::placeSend(float x, float y)
 {
-	  move_base_msgs::MoveBaseGoal goal;
-	  auto& pos = goal.target_pose.pose.position;
-	  pos.x = x;
-	  pos.y = y;
-	  ROS_INFO("PrologRobotInterface: place(%.2f,%.2f) sending.",pos.x, pos.y);
-	  placeAc_.sendGoal(goal, boost::bind(&InteractiveClient::placeDoneCb, this, _1, _2));
+	if(actionInProgress_)
+	{
+		ROS_ERROR("PrologRobotInterface::placeSend: another action was in progress. aborting !");
+		ros::shutdown();
+	}
+	actionInProgress_ = true;
+	if(!gotoAc_.isServerConnected())
+	{
+		ROS_WARN("PrologRobotInterface::placeSend: action server not connected, scheduling stub.");
+		stubTimer_.stop();
+		stubTimer_.setPeriod(ros::Duration(5));
+		stubTimer_.start();
+		return;
+	}
+	move_base_msgs::MoveBaseGoal goal;
+	auto& pos = goal.target_pose.pose.position;
+	pos.x = x;
+	pos.y = y;
+	ROS_INFO("PrologRobotInterface::placeSend: [%.2f,%.2f] sending.", pos.x, pos.y);
+	placeAc_.sendGoal(goal, boost::bind(&InteractiveClient::placeDoneCb, this, _1, _2));
 }
 
 void InteractiveClient::respondSend(const std::string & response)
 {
+	if(!respondSrv_.exists())
+	{
+		ROS_WARN("PrologRobotInterface::respondSend: chatbot respond service not found, returning.");
+		return;
+	}
+
 	chatbot::Respond res;
 	res.request.str = response;
-	ROS_INFO("PrologRobotInterface: respond sending: %s.", response.c_str());
+	ROS_INFO("PrologRobotInterface::respondSend: %s.", response.c_str());
 	respondSrv_.call(res);
-	ROS_INFO("PrologRobotInterface: respond done.");
+	ROS_INFO("PrologRobotInterface::respondSend: done!");
 }
 
 std::string InteractiveClient::getCommaSeparatedString(std::string input) const
@@ -495,39 +526,61 @@ std::string InteractiveClient::convertToSentence(const std::vector<std::string>&
 
 void InteractiveClient::toInput(const std::string& input)
 {
-	  std::ofstream inputFile;
-	  inputFile.open(inputFile_.c_str(), std::ios::trunc);
-	  inputFile << input;
-	  inputFile.close();
+	std::ofstream inputFile;
+	inputFile.open(inputFile_.c_str(), std::ios::trunc);
+	inputFile << input;
+	inputFile.close();
 }
 
-void InteractiveClient::parseOutput()
+std::string InteractiveClient::getOutput()
 {
-	  std::ifstream f(outputFile_);
-	  std::string line;
-	  while (std::getline(f, line))
-	  {
-		  std::string command = line.substr(0, line.find_first_of(" \t")-1); // throw away ':'
-		  std::string arguments = line.substr(line.find_first_of(" \t")+1);
-		  std::vector<std::string> vecArgs = parseArguments(arguments);
-		  if(command == "GOTO")
-		  {
-			  gotoSend(std::strtof(vecArgs[3].c_str(),NULL), std::strtof(vecArgs[4].c_str(),NULL));
-		  } else if(command == "PICK")
-		  {
-			  pickSend(std::strtof(vecArgs[2].c_str(),NULL), std::strtof(vecArgs[3].c_str(),NULL));
-		  } else if(command == "PLACE")
-		  {
-			  placeSend(std::strtof(vecArgs[2].c_str(),NULL), std::strtof(vecArgs[3].c_str(),NULL));
-		  } else if(command == "RESPOND")
-		  {
-			  respondSend(convertToSentence(vecArgs));
-		  }
-		  else
-		  {
-			  ROS_ERROR("PrologRobotInterface: Unknown command from prolog: %s", line.c_str());
-		  }
-	  }
+
+	doQuery("are_files_free.");
+	std::ifstream f(outputFile_);
+	std::stringstream ss;
+	if (f)
+	{
+		ss << f.rdbuf();
+		f.close();
+	}
+	return ss.str();
+}
+
+void InteractiveClient::parseOutput(const std::string& output)
+{
+	std::istringstream iss(output);
+	std::string line;
+	while (std::getline(iss, line))
+	{
+		std::string command = line.substr(0, line.find_first_of(" \t") - 1); // throw away ':'
+		std::string arguments = line.substr(line.find_first_of(" \t") + 1);
+		std::vector<std::string> vecArgs = parseArguments(arguments);
+		if (command == "GOTO")
+		{
+			gotoSend(std::strtof(vecArgs[3].c_str(), NULL),
+					std::strtof(vecArgs[4].c_str(), NULL));
+		}
+		else if (command == "PICK")
+		{
+			pickSend(std::strtof(vecArgs[2].c_str(), NULL),
+					std::strtof(vecArgs[3].c_str(), NULL));
+		}
+		else if (command == "PLACE")
+		{
+			placeSend(std::strtof(vecArgs[2].c_str(), NULL),
+					std::strtof(vecArgs[3].c_str(), NULL));
+		}
+		else if (command == "RESPOND")
+		{
+			respondSend(convertToSentence(vecArgs));
+		}
+		else
+		{
+			ROS_ERROR(
+					"PrologRobotInterface::parseOutput: unknown command from output file: %s",
+					line.c_str());
+		}
+	}
 }
 
 std::vector<std::string> InteractiveClient::parseArguments(const std::string& arguments) const
@@ -540,7 +593,7 @@ std::vector<std::string> InteractiveClient::parseArguments(const std::string& ar
 	    std::string word;
 	    std::getline( ss, word, ',' );
 	    word.erase(std::remove_if(word.begin(), word.end(), [](char c) {return c == '(' || c == ')' || c == ' ' || c == '[' || c == ']';}), word.end());
-	    result.push_back(word);
+		result.push_back(word);
 	}
 	return result;
 }
@@ -555,13 +608,19 @@ void InteractiveClient::cleanOutput()
 void InteractiveClient::handleOutput()
 {
 	cleanupThreadIfDone();
-	parseOutput();
+	std::string output = getOutput();
+	if (output.length())
+	{
+		ROS_INFO("PrologRobotInterface::handleOutput: output_file:");
+		ROS_INFO("\n%s", output.c_str());
+		parseOutput(output);
+	}
 	cleanOutput();
 }
 
 bool InteractiveClient::isResultSuccess(const std::string& res)
 {
-	if(res.find("true") != std::string::npos)
+	if (res.find("true") != std::string::npos)
 		return true;
 	else
 		return false;

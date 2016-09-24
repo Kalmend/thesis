@@ -52,6 +52,7 @@ private:
 	void cleanupThreadIfDone();
 
 	//calls to robot
+	void stubCb(const ros::TimerEvent& event);
 	void gotoDoneCb(const actionlib::SimpleClientGoalState& state,
 			const move_base_msgs::MoveBaseResultConstPtr& goal);
 	void gotoSend(float x, float y);
@@ -70,7 +71,8 @@ private:
 	std::string trimGarbage(std::string  raw) const;
 	std::string convertToSentence(const std::vector<std::string>& words) const;
 	void toInput(const std::string& input);
-	void parseOutput();
+	std::string getOutput();
+	void parseOutput(const std::string& output);
 	std::vector<std::string> parseArguments(const std::string& arguments) const;
 	void cleanOutput();
 	void handleOutput();
@@ -97,6 +99,8 @@ private:
 	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> pickAc_;
 	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> placeAc_;
 	ros::ServiceClient respondSrv_;
+	ros::Timer stubTimer_;
+	bool actionInProgress_;
 
 };
 }
