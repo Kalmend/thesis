@@ -17,13 +17,14 @@ ChatCore::ChatCore() :
 }
 
 
-void ChatCore::executeGotoCB(const move_base_msgs::MoveBaseGoalConstPtr &goal)
+void ChatCore::executeGotoCB(const chatbot::NamedMoveBaseGoalConstPtr &goal)
 {
-    bool success = true;
-    auto x = goal->target_pose.pose.position.x;
-    auto y = goal->target_pose.pose.position.y;
+	bool success = true;
+    auto x = goal->goal_move_base.target_pose.pose.position.x;
+    auto y = goal->goal_move_base.target_pose.pose.position.y;
+    auto name = goal->goal_name;
     // publish info to the console for the user
-    ROS_INFO("ChatCore: goto(%.2f,%.2f) received from prolog!", x, y);
+    ROS_INFO("ChatCore::goto: %s[%.2f,%.2f] received from prolog!", name.c_str(), x, y);
 
     // start executing the action
 
@@ -37,33 +38,34 @@ void ChatCore::executeGotoCB(const move_base_msgs::MoveBaseGoalConstPtr &goal)
     }
 
     while(!gotoAc_.waitForServer(ros::Duration(5.0)))
-      ROS_INFO("Goto received, but no move_base server. Waiting for the move_base action server to come up");
+      ROS_INFO("ChatCore:goto: goto received, but no move_base server. Waiting for the move_base action server to come up");
 
-    ROS_INFO("Sending goal");
-    gotoAc_.sendGoal(*goal);
+    ROS_INFO("ChatCore::goto: sending goal to planner.");
+    gotoAc_.sendGoal(goal->goal_move_base);
     gotoAc_.waitForResult();
 
     if(success && gotoAc_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("ChatCore: goto completed!");
-  	  move_base_msgs::MoveBaseResult res;
+  	  chatbot::NamedMoveBaseResult res;
       gotoAs_.setSucceeded(res, "success");
     }
     else
     {
         ROS_INFO("ChatCore:goto preempted!");
-    	move_base_msgs::MoveBaseResult res;
+        chatbot::NamedMoveBaseResult res;
         gotoAs_.setPreempted(res, "preempted");
     }
 }
 
-void ChatCore::executePickCB(const move_base_msgs::MoveBaseGoalConstPtr &goal)
+void ChatCore::executePickCB(const chatbot::NamedMoveBaseGoalConstPtr &goal)
 {
     bool success = true;
-    auto x = goal->target_pose.pose.position.x;
-    auto y = goal->target_pose.pose.position.y;
+    auto x = goal->goal_move_base.target_pose.pose.position.x;
+    auto y = goal->goal_move_base.target_pose.pose.position.y;
+    auto name = goal->goal_name;
     // publish info to the console for the user
-    ROS_INFO("ChatCore: pick(%.2f,%.2f) received from prolog!", x, y);
+    ROS_INFO("ChatCore::pick: %s[%.2f,%.2f] received from prolog!", name.c_str(), x, y);
 
     // start executing the action
 
@@ -80,24 +82,25 @@ void ChatCore::executePickCB(const move_base_msgs::MoveBaseGoalConstPtr &goal)
     if(success)
     {
       ROS_INFO("ChatCore: pick completed!");
-  	  move_base_msgs::MoveBaseResult res;
+  	  chatbot::NamedMoveBaseResult res;
       pickAs_.setSucceeded(res, "success");
     }
     else
     {
         ROS_INFO("ChatCore:pick preempted!");
-    	move_base_msgs::MoveBaseResult res;
+    	chatbot::NamedMoveBaseResult res;
         pickAs_.setPreempted(res, "preempted");
     }
 }
 
-void ChatCore::executePlaceCB(const move_base_msgs::MoveBaseGoalConstPtr &goal)
+void ChatCore::executePlaceCB(const chatbot::NamedMoveBaseGoalConstPtr &goal)
 {
     bool success = true;
-    auto x = goal->target_pose.pose.position.x;
-    auto y = goal->target_pose.pose.position.y;
+    auto x = goal->goal_move_base.target_pose.pose.position.x;
+    auto y = goal->goal_move_base.target_pose.pose.position.y;
+    auto name = goal->goal_name;
     // publish info to the console for the user
-    ROS_INFO("ChatCore: place(%.2f,%.2f) received from prolog!", x, y);
+    ROS_INFO("ChatCore::place: %s[%.2f,%.2f] received from prolog!", name.c_str(), x, y);
 
     // start executing the action
 
@@ -114,20 +117,20 @@ void ChatCore::executePlaceCB(const move_base_msgs::MoveBaseGoalConstPtr &goal)
     if(success)
     {
       ROS_INFO("ChatCore: place completed!");
-  	  move_base_msgs::MoveBaseResult res;
+  	  chatbot::NamedMoveBaseResult res;
       placeAs_.setSucceeded(res, "success");
     }
     else
     {
         ROS_INFO("ChatCore:place preempted!");
-    	move_base_msgs::MoveBaseResult res;
+    	chatbot::NamedMoveBaseResult res;
         placeAs_.setPreempted(res, "preempted");
     }
 }
 
 bool ChatCore::executeRespond(chatbot::RespondRequest &req, chatbot::RespondResponse & res)
 {
-	ROS_INFO("ChatCore:responding: %s", req.str.c_str());
+	ROS_INFO("ChatCore:respond: %s", req.str.c_str());
 	return true;
 }
 

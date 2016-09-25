@@ -345,7 +345,7 @@ void InteractiveClient::stubCb(const ros::TimerEvent& event)
 
 void InteractiveClient::gotoDoneCb(
 		const actionlib::SimpleClientGoalState& state,
-		const move_base_msgs::MoveBaseResultConstPtr &result)
+		const chatbot::NamedMoveBaseResultConstPtr &result)
 {
 	if(!actionInProgress_)
 	{
@@ -358,7 +358,7 @@ void InteractiveClient::gotoDoneCb(
 	handleOutput();
 }
 
-void InteractiveClient::gotoSend(float x, float y)
+void InteractiveClient::gotoSend(const std::string& dest, float x, float y)
 {
 	if(actionInProgress_)
 	{
@@ -374,19 +374,20 @@ void InteractiveClient::gotoSend(float x, float y)
 		stubTimer_.start();
 		return;
 	}
-	move_base_msgs::MoveBaseGoal goal;
-	auto& pos = goal.target_pose.pose.position;
+	chatbot::NamedMoveBaseGoal goal;
+	auto& pos = goal.goal_move_base.target_pose.pose.position;
 	pos.x = x;
 	pos.y = y;
-	goal.target_pose.pose.orientation.w = 1.0;
-	goal.target_pose.header.frame_id = "map";
-	ROS_INFO("PrologRobotInterface:gotoSend: [%.2f,%.2f] sending.", pos.x, pos.y);
+	goal.goal_move_base.target_pose.pose.orientation.w = 1.0;
+	goal.goal_move_base.target_pose.header.frame_id = "map";
+	goal.goal_name = dest;
+	ROS_INFO("PrologRobotInterface:gotoSend: %s[%.2f,%.2f] sending.", dest.c_str(), pos.x, pos.y);
 	gotoAc_.sendGoal(goal, boost::bind(&InteractiveClient::gotoDoneCb, this, _1, _2));
 }
 
 void InteractiveClient::pickDoneCb(
 		const actionlib::SimpleClientGoalState& state,
-		const move_base_msgs::MoveBaseResultConstPtr &result)
+		const chatbot::NamedMoveBaseResultConstPtr &result)
 {
 	if(!actionInProgress_)
 	{
@@ -399,7 +400,7 @@ void InteractiveClient::pickDoneCb(
 	handleOutput();
 }
 
-void InteractiveClient::pickSend(float x, float y)
+void InteractiveClient::pickSend(const std::string& object, float x, float y)
 {
 	if(actionInProgress_)
 	{
@@ -415,17 +416,18 @@ void InteractiveClient::pickSend(float x, float y)
 		stubTimer_.start();
 		return;
 	}
-	move_base_msgs::MoveBaseGoal goal;
-	auto& pos = goal.target_pose.pose.position;
+	chatbot::NamedMoveBaseGoal goal;
+	auto& pos = goal.goal_move_base.target_pose.pose.position;
 	pos.x = x;
 	pos.y = y;
-	ROS_INFO("PrologRobotInterface::pickSend: [%.2f,%.2f] sending.", pos.x, pos.y);
+	goal.goal_name = object;
+	ROS_INFO("PrologRobotInterface::pickSend: %s[%.2f,%.2f] sending.", object.c_str(), pos.x, pos.y);
 	pickAc_.sendGoal(goal, boost::bind(&InteractiveClient::pickDoneCb, this, _1, _2));
 }
 
 void InteractiveClient::placeDoneCb(
 		const actionlib::SimpleClientGoalState& state,
-		const move_base_msgs::MoveBaseResultConstPtr &result)
+		const chatbot::NamedMoveBaseResultConstPtr &result)
 {
 	if(!actionInProgress_)
 	{
@@ -438,7 +440,7 @@ void InteractiveClient::placeDoneCb(
 	handleOutput();
 }
 
-void InteractiveClient::placeSend(float x, float y)
+void InteractiveClient::placeSend(const std::string& object, float x, float y)
 {
 	if(actionInProgress_)
 	{
@@ -454,11 +456,12 @@ void InteractiveClient::placeSend(float x, float y)
 		stubTimer_.start();
 		return;
 	}
-	move_base_msgs::MoveBaseGoal goal;
-	auto& pos = goal.target_pose.pose.position;
+	chatbot::NamedMoveBaseGoal goal;
+	auto& pos = goal.goal_move_base.target_pose.pose.position;
 	pos.x = x;
 	pos.y = y;
-	ROS_INFO("PrologRobotInterface::placeSend: [%.2f,%.2f] sending.", pos.x, pos.y);
+	goal.goal_name = object;
+	ROS_INFO("PrologRobotInterface::placeSend: %s[%.2f,%.2f] sending.", object.c_str(), pos.x, pos.y);
 	placeAc_.sendGoal(goal, boost::bind(&InteractiveClient::placeDoneCb, this, _1, _2));
 }
 
@@ -557,17 +560,20 @@ void InteractiveClient::parseOutput(const std::string& output)
 		std::vector<std::string> vecArgs = parseArguments(arguments);
 		if (command == "GOTO")
 		{
-			gotoSend(std::strtof(vecArgs[3].c_str(), NULL),
+			gotoSend(vecArgs[0],
+					std::strtof(vecArgs[3].c_str(), NULL),
 					std::strtof(vecArgs[4].c_str(), NULL));
 		}
 		else if (command == "PICK")
 		{
-			pickSend(std::strtof(vecArgs[2].c_str(), NULL),
+			pickSend(vecArgs[0],
+					std::strtof(vecArgs[2].c_str(), NULL),
 					std::strtof(vecArgs[3].c_str(), NULL));
 		}
 		else if (command == "PLACE")
 		{
-			placeSend(std::strtof(vecArgs[2].c_str(), NULL),
+			placeSend(vecArgs[0],
+					std::strtof(vecArgs[2].c_str(), NULL),
 					std::strtof(vecArgs[3].c_str(), NULL));
 		}
 		else if (command == "RESPOND")

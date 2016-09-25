@@ -4,23 +4,23 @@ using namespace std;
 #include <actionlib/client/simple_action_client.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include "chatbot/Respond.h"
-
+#include "chatbot/NamedMoveBaseAction.h"
 class ChatCore
 {
 public:
 	ChatCore();
 	~ChatCore();
 protected:
-	void executeGotoCB(const move_base_msgs::MoveBaseGoalConstPtr &goal);
-	void executePickCB(const move_base_msgs::MoveBaseGoalConstPtr &goal);
-	void executePlaceCB(const move_base_msgs::MoveBaseGoalConstPtr &goal);
+	void executeGotoCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
+	void executePickCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
+	void executePlaceCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
 	bool executeRespond(chatbot::RespondRequest &req, chatbot::RespondResponse & res);
 
 	ros::NodeHandle nh_;
 
-	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> gotoAs_;
-	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> pickAs_;
-	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> placeAs_;
+	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> gotoAs_;
+	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> pickAs_;
+	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> placeAs_;
 	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> gotoAc_;
 	ros::ServiceServer respondSrv_;
 };

@@ -21,6 +21,7 @@ catkin_package(
   LIBRARIES
     prolog_client
   DEPENDS
+    chatbot
     prolog_common
     prolog_msgs
     prolog_serialization

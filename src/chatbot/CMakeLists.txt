@@ -7,14 +7,21 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   move_base_msgs
   actionlib
+  actionlib_msgs
+  geometry_msgs
   genmsg
 )
 
+## action messages
+add_action_files (
+  DIRECTORY action
+  FILES NamedMoveBase.action
+)
 ## Declare ROS messages and services
 add_service_files(FILES Respond.srv)
 
 ## Generate added messages and services
-generate_messages(DEPENDENCIES std_msgs)
+generate_messages(DEPENDENCIES actionlib_msgs std_msgs move_base_msgs)
 
 include(FindPkgConfig)
 find_package(PkgConfig)
@@ -33,7 +40,7 @@ include_directories(
 
 
 
-catkin_package()
+catkin_package( CATKIN_DEPENDS actionlib_msgs)
 
 add_executable(chatbot src/chatbot_core.cpp)
 target_link_libraries(chatbot ${catkin_LIBRARIES} ${GST1.0_LIBRARIES} ${Boost_LIBRARIES})

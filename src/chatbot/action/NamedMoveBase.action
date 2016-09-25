@@ -1,0 +1,9 @@
+#goal definition
+move_base_msgs/MoveBaseGoal goal_move_base
+string goal_name
+---
+#result definition
+move_base_msgs/MoveBaseResult result
+---
+#feedback
+move_base_msgs/MoveBaseFeedback feedback

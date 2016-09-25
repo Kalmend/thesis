@@ -2,7 +2,7 @@
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
-#include <move_base_msgs/MoveBaseAction.h>
+#include <chatbot/NamedMoveBaseAction.h>
 #include <string>
 #include <vector>
 
@@ -54,16 +54,16 @@ private:
 	//calls to robot
 	void stubCb(const ros::TimerEvent& event);
 	void gotoDoneCb(const actionlib::SimpleClientGoalState& state,
-			const move_base_msgs::MoveBaseResultConstPtr& goal);
-	void gotoSend(float x, float y);
+			const chatbot::NamedMoveBaseResultConstPtr& goal);
+	void gotoSend(const std::string& dest, float x, float y);
 
 	void pickDoneCb(const actionlib::SimpleClientGoalState& state,
-			const move_base_msgs::MoveBaseResultConstPtr& goal);
-	void pickSend(float x, float y);
+			const chatbot::NamedMoveBaseResultConstPtr& goal);
+	void pickSend(const std::string& object, float x, float y);
 
 	void placeDoneCb(const actionlib::SimpleClientGoalState& state,
-			const move_base_msgs::MoveBaseResultConstPtr& goal);
-	void placeSend(float x, float y);
+			const chatbot::NamedMoveBaseResultConstPtr& goal);
+	void placeSend(const std::string& object, float x, float y);
 	void respondSend(const std::string & response);
 
 	//helpers and file handling
@@ -95,9 +95,9 @@ private:
 	std::string inputFile_;
 	std::string outputFile_;
 
-	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> gotoAc_;
-	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> pickAc_;
-	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> placeAc_;
+	actionlib::SimpleActionClient<chatbot::NamedMoveBaseAction> gotoAc_;
+	actionlib::SimpleActionClient<chatbot::NamedMoveBaseAction> pickAc_;
+	actionlib::SimpleActionClient<chatbot::NamedMoveBaseAction> placeAc_;
 	ros::ServiceClient respondSrv_;
 	ros::Timer stubTimer_;
 	bool actionInProgress_;
