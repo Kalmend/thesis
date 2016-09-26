@@ -129,8 +129,8 @@ void InteractiveClient::startInput()
 	std::cout << "?-" << std::flush;
 	boost::asio::async_read_until(inputStream_, inputBuffer_, '\n',
 			boost::bind(&InteractiveClient::handleInput, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-
-	ioThread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &ioService_));
+	std::size_t (boost::asio::io_service::*run)() = &boost::asio::io_service::run;
+	ioThread_ = boost::thread(boost::bind(run, &ioService_));
 }
 
 void InteractiveClient::handleInput(const boost::system::error_code& error, size_t length)
