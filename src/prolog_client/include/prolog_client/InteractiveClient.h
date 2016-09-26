@@ -11,7 +11,6 @@
 #include <boost/thread.hpp>
 
 #include <prolog_client/Client.h>
-#include <prolog_client/QueryProxy.h>
 #include <std_msgs/String.h>
 
 namespace prolog
@@ -22,11 +21,6 @@ namespace client
 class InteractiveClient: public Client
 {
 public:
-
-	enum SolutionMode
-	{
-		FirstSolution, AllSolutions, IncrementalSolutions
-	};
 
 	InteractiveClient();
 	virtual ~InteractiveClient();
@@ -46,8 +40,8 @@ private:
 	void handleInput(const boost::system::error_code& error, size_t length);
 
 	//calls to prolog
-	std::string execute(const std::string& input);
-	std::string doQuery(const std::string& queryString);
+	bool execute(const std::string& input);
+	bool doQuery(const std::string& queryString);
 	void signalDone();
 	void cleanupThreadIfDone();
 
@@ -76,18 +70,13 @@ private:
 	std::vector<std::string> parseArguments(const std::string& arguments) const;
 	void cleanOutput();
 	void handleOutput();
-	bool isResultSuccess(const std::string& res);
 
-	SolutionMode solutionMode_;
 	ServiceClient serviceClient_;
 	boost::asio::io_service ioService_;
 	boost::thread ioThread_;
 	boost::asio::posix::stream_descriptor inputStream_;
 	boost::asio::streambuf inputBuffer_;
 	size_t inputColumn_;
-	Query query_;
-	QueryProxy queryProxy_;
-	QueryProxy::Iterator iterator_;
 
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_;

@@ -81,7 +81,8 @@ namespace prolog {
       
     private:
       friend class MultiThreadedServer;
-      
+      friend class SimpleServer;
+
       /** \brief Threaded Prolog query (implementation)
         */ 
       class Impl {

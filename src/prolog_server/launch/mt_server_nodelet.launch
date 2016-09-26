@@ -5,7 +5,7 @@
   <arg name="output" default="screen"/>
 
   <node name="prolog_server" pkg="nodelet" type="nodelet"
-        args="load prolog_server/MultiThreadedServer $(arg manager)"
+        args="load prolog_server/SimpleServer $(arg manager)"
         output="$(arg output)">
     <rosparam command="load" file="$(arg config_file)"/>
   </node>   

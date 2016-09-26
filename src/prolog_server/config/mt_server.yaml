@@ -3,6 +3,6 @@ prolog:
   local_stack: 256
   trail_stack: 256
   
-  num_engines: 4
+  num_engines: 1
   executable: /usr/bin/swipl
   

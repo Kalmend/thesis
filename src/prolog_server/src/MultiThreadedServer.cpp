@@ -53,7 +53,7 @@ void MultiThreadedServer::init() {
     serviceServer_ = advertisePrologService("prolog");
     
     size_t numEngines = getParam(ros::names::append("prolog",
-      "num_engines"), 4);
+      "num_engines"), 1);
     
     for (size_t index = 0; index < numEngines; ++index) {
       engines_.push_back(createPrologEngine("pooled_engine_"+

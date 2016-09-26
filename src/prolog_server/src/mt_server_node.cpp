@@ -18,13 +18,12 @@
 
 #include <roscpp_nodewrap/Node.h>
 
-#include "prolog_server/MultiThreadedServer.h"
+#include "prolog_server/SimpleServer.h"
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "prolog_server");
   
-  nodewrap::Node<prolog::server::MultiThreadedServer> node;
-
+  nodewrap::Node<prolog::server::SimpleServer> node;
   ros::spin();
     
   return 0;

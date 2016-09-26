@@ -45,7 +45,7 @@ include_directories(
 
 add_library(
   prolog_server
-    src/MultiThreadedServer.cpp
+    src/SimpleServer.cpp
     src/Server.cpp
     src/ServiceServer.cpp
     src/ThreadedQuery.cpp
