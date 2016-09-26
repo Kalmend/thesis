@@ -9,8 +9,12 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
   geometry_msgs
-  genmsg
+  message_generation
 )
+
+include(FindPkgConfig)
+find_package(PkgConfig)
+find_package(Boost REQUIRED COMPONENTS thread )
 
 ## action messages
 add_action_files (
@@ -22,15 +26,11 @@ add_service_files(FILES Respond.srv)
 
 ## Generate added messages and services
 generate_messages(DEPENDENCIES actionlib_msgs std_msgs move_base_msgs)
-
-include(FindPkgConfig)
-find_package(PkgConfig)
-find_package(Boost REQUIRED COMPONENTS thread )
+catkin_package( CATKIN_DEPENDS message_runtime actionlib_msgs)
 
 MESSAGE(STATUS "LINK_EXEC: " ${CMAKE_CXX_LINK_EXECUTABLE})
 MESSAGE(STATUS "LINKER: " ${CMAKE_LINKER})
 MESSAGE(STATUS "COMPILER: " ${CMAKE_CXX_COMPILER})
-
 
 include_directories(
   include 
@@ -38,13 +38,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS} 
 )
 
-
-
-catkin_package( CATKIN_DEPENDS actionlib_msgs)
-
 add_executable(chatbot src/chatbot_core.cpp)
-target_link_libraries(chatbot ${catkin_LIBRARIES} ${GST1.0_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(chatbot ${catkin_EXPORTED_TARGETS})
+target_link_libraries(chatbot ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(chatbot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 install(TARGETS chatbot
