@@ -311,12 +311,17 @@ interpret_command(ToR, FromR,Phrase,Rest):-								% vii
 	update(cc3,[now]),
 	reaction(ToR, FromR,vii),!.
 interpret_command(ToR, FromR,Phrase,Rest):-								% liigu, mine
-	update(cc3,[now]),update(cc3TXT,[esimesel,võimalusel]),
+	update(cc3,[now]),update(cc3TXT,[esimesel,võimalusel]),				% -----ajamääruse blokk
 	in_context(Phrase,mine,_,Phrase0),
-	(in_context(Phrase0,viisimäärus1,_,Phrase1);in_context(Phrase0,ajamäärus,_,Phrase1);Phrase1=Phrase0),
-	(in_context(Phrase1,kohamäärus1,_,Rest); (in_context(Phrase1,objekt2,Object,Phrase2),update(cc2,[Object]);
-	in_context(Phrase1,isik_2,Keegi,Phrase2),update(cc0,[Keegi])), update(ccx,[Keegi]),
-	(in_context(Phrase2,juurde,_,Rest));Rest=Phrase1),
+	  (in_context(Phrase0,viisimäärus1,_,Phrase1);
+	   in_context(Phrase0,ajamäärus,_,Phrase1);
+	   Phrase1=Phrase0),
+	(in_context(Phrase1,kohamäärus1,_,Rest),update(cc2,Phrase1); 							%------kohamääruse blokk
+	 koht1_4(Phrase1,Rest);
+	 (in_context(Phrase1,objekt2,Object,Phrase2),update(cc2,[Object]);
+	 in_context(Phrase1,isik_2,Keegi,Phrase2),update(cc0,[Keegi])), update(ccx,[Keegi]),
+	 (in_context(Phrase2,juurde,_,Rest));
+	 Rest=Phrase1),
 	reaction(ToR, FromR,liigu_mine),!.
 interpret_command(_, _,_,_):-
 	write('Ei saanud sellest lausest aru'), nl,
@@ -681,7 +686,8 @@ reaction(ToR, FromR,vii):-
 	find_case(CCxNim,7,_),
 	respond(ToR,[CC1,on,viidud]),!.
 reaction(ToR, FromR,liigu_mine):-
-	ccx(CCx),
+%	ccx(CCx),
+	cc2(CCx),
 	find_case(CCxNim,_,CCx),
 	world(CCxNim,Idx,_,XYZQ,_),
 	respond(ToR,[sain,aru,hakkan,minema]),
