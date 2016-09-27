@@ -11,16 +11,21 @@ public:
 	ChatCore();
 	~ChatCore();
 protected:
+
+	void preemptGotoCB();
 	void executeGotoCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
 	void executePickCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
 	void executePlaceCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
 	bool executeRespond(chatbot::RespondRequest &req, chatbot::RespondResponse & res);
+
+	void navDoneCB(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr &result);
 
 	ros::NodeHandle nh_;
 
 	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> gotoAs_;
 	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> pickAs_;
 	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> placeAs_;
+
 	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> gotoAc_;
 	ros::ServiceServer respondSrv_;
 };

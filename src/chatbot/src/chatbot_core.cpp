@@ -10,16 +10,49 @@ ChatCore::ChatCore() :
 	placeAs_(nh_, "place", boost::bind(&ChatCore::executePlaceCB, this, _1), false),
 	gotoAc_(nh_, "move_base", false)
 {
+	gotoAs_.registerPreemptCallback(boost::bind(&ChatCore::preemptGotoCB, this));
 	gotoAs_.start();
 	pickAs_.start();
 	placeAs_.start();
 	respondSrv_ = nh_.advertiseService("/respond", &ChatCore::executeRespond, this);
 }
 
+void ChatCore::navDoneCB(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr &result)
+{
+	ROS_INFO("ChatCore:navDoneCB()");
+
+	if(actionlib::SimpleClientGoalState)
+
+	// check that preempt has not been requested by the client
+	if (gotoAs_.isPreemptRequested() || !ros::ok()) {
+		ROS_INFO("ChatCore::navDoneCB: goto was preempted!");
+		// set the action state to preempted
+		gotoAs_.setPreempted();
+		return;
+	}
+
+	if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
+		ROS_INFO("ChatCore::navDoneCB: goto completed!");
+		gotoAs_.setSucceeded();
+	} else {
+		ROS_INFO("ChatCore::navDoneCB: goto was aborted!");
+		gotoAs_.setAborted();
+	}
+}
+
+void ChatCore::preemptGotoCB()
+{
+	ROS_INFO("ChatCore:goto preempted!");
+	ROS_INFO("ChatCore:cancelling navigation.");
+	gotoAc_.cancelGoal();
+	gotoAs_.setPreempted();
+}
 
 void ChatCore::executeGotoCB(const chatbot::NamedMoveBaseGoalConstPtr &goal)
 {
-	bool success = true;
+	if(!gotoAs_.isActive())
+		return;
+
     auto x = goal->goal_move_base.target_pose.pose.position.x;
 	auto y = goal->goal_move_base.target_pose.pose.position.y;
 	auto name = goal->goal_name;
@@ -31,29 +64,7 @@ void ChatCore::executeGotoCB(const chatbot::NamedMoveBaseGoalConstPtr &goal)
 		ROS_INFO("ChatCore:goto: goto received, but no move_base server. Waiting for the move_base action server to come up");
 
 	ROS_INFO("ChatCore::goto: sending goal to planner.");
-	gotoAc_.sendGoal(goal->goal_move_base);
-	gotoAc_.waitForResult();
-	// check that preempt has not been requested by the client
-	if (gotoAs_.isPreemptRequested() || !ros::ok())
-	{
-		ROS_INFO("ChatCore: goto cancelled!");
-		// set the action state to preempted
-		gotoAs_.setPreempted();
-		success = false;
-	}
-
-	if (success && gotoAc_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-	{
-      ROS_INFO("ChatCore: goto completed!");
-  	  chatbot::NamedMoveBaseResult res;
-      gotoAs_.setSucceeded(res, "success");
-    }
-    else
-    {
-        ROS_INFO("ChatCore:goto preempted!");
-        chatbot::NamedMoveBaseResult res;
-        gotoAs_.setPreempted(res, "preempted");
-    }
+	gotoAc_.sendGoal(goal->goal_move_base, boost::bind(&ChatCore::navDoneCB, this, _1, _2));
 }
 
 void ChatCore::executePickCB(const chatbot::NamedMoveBaseGoalConstPtr &goal)
