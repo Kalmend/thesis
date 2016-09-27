@@ -29,9 +29,16 @@ namespace client
 /*****************************************************************************/
 
 InteractiveClient::InteractiveClient() :
-		inputStream_(ioService_, dup(STDIN_FILENO)), inputColumn_(0), inputFile_(""), outputFile_(""), gotoAc_("goto", false), pickAc_("pick", false), placeAc_(
-				"place", false), respondSrv_(nh_.serviceClient<chatbot::Respond>("respond")), stubTimer_(
-				nh_.createTimer(ros::Duration(0.1), &InteractiveClient::stubCb, this, true, false)), actionInProgress_(false)
+		inputStream_(ioService_, dup(STDIN_FILENO)),
+		inputColumn_(0),
+		inputFile_(""),
+		outputFile_(""),
+		gotoAc_("goto", false),
+		pickAc_("pick", false),
+		placeAc_("place", false),
+		respondSrv_(nh_.serviceClient<chatbot::Respond>("respond")),
+		stubTimer_(nh_.createTimer(ros::Duration(0.1), &InteractiveClient::stubCb, this, true, false)),
+		actionInProgress_(false)
 {
 }
 

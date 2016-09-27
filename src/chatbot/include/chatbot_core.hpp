@@ -3,6 +3,7 @@ using namespace std;
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <std_msgs/String.h>
 #include "chatbot/Respond.h"
 #include "chatbot/NamedMoveBaseAction.h"
 class ChatCore
@@ -12,13 +13,23 @@ public:
 	~ChatCore();
 protected:
 
+	void goalGotoCB();
 	void preemptGotoCB();
-	void executeGotoCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
-	void executePickCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
-	void executePlaceCB(const chatbot::NamedMoveBaseGoalConstPtr &goal);
+	void executeGoto(const chatbot::NamedMoveBaseGoalConstPtr &goal);
+	void navDoneCB(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr &result);
+
+	void goalPickCB();
+	void preemptPickCB();
+	void executePick(const chatbot::NamedMoveBaseGoalConstPtr &goal);
+	void pickDoneCb(const std_msgs::String::ConstPtr& item);
+
+	void goalPlaceCB();
+	void preemptPlaceCB();
+	void executePlace(const chatbot::NamedMoveBaseGoalConstPtr &goal);
+	void placeDoneCb(const std_msgs::String::ConstPtr& item);
+
 	bool executeRespond(chatbot::RespondRequest &req, chatbot::RespondResponse & res);
 
-	void navDoneCB(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr &result);
 
 	ros::NodeHandle nh_;
 
@@ -27,5 +38,9 @@ protected:
 	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> placeAs_;
 
 	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> gotoAc_;
+	ros::Subscriber pickSub_;
+	ros::Subscriber placeSub_;
+	ros::Publisher respondPub_;
+
 	ros::ServiceServer respondSrv_;
 };

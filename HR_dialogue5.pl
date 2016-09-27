@@ -782,7 +782,7 @@ world(ajaleht,	id41, id29, (1,14,0,0,0,0,1), 0).
 world(ajakiri,	id42, id29, (1,14,0,0,0,0,1), 0).
 
 % Entities of context cc2 --------------------------
-world(koridor,  id11,[],  (7,2,3,0,0,0,1),  0).
+world(koridor,  id11,[],  (1,9,3,0,0,0,1),  0).
 world(ruum_419, id12,[],  (3,4,0,0,0,0,1),    0).
 world(ruum_420, id43,[],  (3,4,0,0,0,0,1),    0).
 world(ruum_421, id13,[],  (43,14,0,0,0,0,1),  0).
