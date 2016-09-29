@@ -181,7 +181,9 @@ void ChatCore::placeDoneCb(const std_msgs::String::ConstPtr& msg)
 bool ChatCore::executeRespond(chatbot::RespondRequest &req, chatbot::RespondResponse & res)
 {
 	ROS_INFO("ChatCore:respond: %s", req.str.c_str());
-	respondPub_.publish(req.str.c_str());
+	std_msgs::String msg;
+	msg.data = req.str;
+	respondPub_.publish(msg);
 	return true;
 }
 

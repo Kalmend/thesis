@@ -46,3 +46,5 @@ target_link_libraries(
   prolog_common
     ${catkin_LIBRARIES}
 )
+add_dependencies(prolog_common ${catkin_EXPORTED_TARGETS})
+
