@@ -1,0 +1,21 @@
+<library path="src">
+  <class name="ChatbotGUI" type="chatbot_gui.gui.ChatbotGUI" base_class_type="rqt_gui_py::Plugin">
+    <description>
+	Python GUI for chatbot.
+    </description>
+    <qtgui>
+      <!-- optional grouping...
+      <group>
+        <label>Group</label>
+      </group>
+      <group>
+        <label>Subgroup</label>
+      </group>
+      -->
+      <label>ChatBot</label>
+      <icon type="theme">applications-engineering</icon>
+      <statustip>ChatBot plugin by Oliver Kalmend</statustip>
+    </qtgui>
+  </class>
+</library>
+

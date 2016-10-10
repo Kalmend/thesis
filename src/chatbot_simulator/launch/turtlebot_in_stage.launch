@@ -8,6 +8,9 @@
   - rviz view
  -->
 <launch>
+  <arg name="visualize"  default="false" />  <!-- true to visualize simulator. GUI has replaced this, so not necessary -->
+  <arg  if="$(arg visualize)" name="sim_visualize"  default="" />
+  <arg  unless="$(arg visualize)" name="sim_visualize"  default="-g" />
   <arg name="base"       default="$(optenv TURTLEBOT_BASE kobuki)"/>  <!-- create, rhoomba -->
   <arg name="stacks"     default="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons -->
   <arg name="3d_sensor"  default="$(optenv TURTLEBOT_3D_SENSOR kinect)"/>  <!-- kinect, asus_xtion_pro -->
@@ -35,7 +38,7 @@
         Args:
           -g : run in headless mode.
   --> 
-  <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)">
+  <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg sim_visualize) $(arg world_file)">
     <param name="base_watchdog_timeout" value="0.5"/>
     <remap from="odom" to="odom"/>
     <remap from="base_pose_ground_truth" to="base_pose_ground_truth"/>
@@ -50,7 +53,8 @@
     <arg name="3d_sensor" value="$(arg 3d_sensor)" />
   </include>
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-    <param name="use_gui" value="true"/>
+    <param unless="$(arg visualize)" name="use_gui" value="false"/>
+     <param if="$(arg visualize)" name="use_gui" value="true"/>
   </node>
 
   <!-- Command Velocity multiplexer -->
@@ -61,7 +65,7 @@
   </node>
 
   <!--  ************** Navigation  ***************  -->
-  <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml"/>
+  <include file="$(find chatbot_simulator)/launch/move_base.launch.xml"/>
 
   <!--  ****** Maps *****  -->
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
@@ -77,5 +81,5 @@
   </include>
 
   <!--  **************** Visualisation ****************  -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_stage)/rviz/robot_navigation.rviz"/>
+  <node if="$(arg visualize)" name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_stage)/rviz/robot_navigation.rviz"/>
 </launch>
