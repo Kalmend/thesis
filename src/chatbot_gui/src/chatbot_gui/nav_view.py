@@ -368,7 +368,7 @@ class NavView(QGraphicsView):
             if p.sub:
                 p.sub.unregister()
 
-        super(NavView, self).close()
+        #super(NavView, self).close()
 
     def _update(self):
         if self._map_item:

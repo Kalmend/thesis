@@ -1,6 +1,7 @@
 build/
 devel/
 *~
+*.pyc
 HCLG.fst
 input.txt
 output.txt

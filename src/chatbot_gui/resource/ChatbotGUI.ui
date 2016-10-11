@@ -29,45 +29,6 @@
       <number>0</number>
      </property>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <property name="leftMargin">
-        <number>5</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>5</number>
-       </property>
-       <item>
-        <widget class="QPushButton" name="PickDone">
-         <property name="toolTip">
-          <string>Complete pick task</string>
-         </property>
-         <property name="text">
-          <string>PickDone</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="PlaceDone">
-         <property name="toolTip">
-          <string>Complete place task</string>
-         </property>
-         <property name="text">
-          <string>PlaceDone</string>
-         </property>
-         <property name="iconSize">
-          <size>
-           <width>16</width>
-           <height>16</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <property name="topMargin">
         <number>0</number>
@@ -76,7 +37,7 @@
         <number>10</number>
        </property>
        <item>
-        <widget class="QTableView" name="table_view">
+        <widget class="QTableView" name="tableLog">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -115,7 +76,62 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="stamp_label">
+          <widget class="QPushButton" name="pickDone">
+           <property name="toolTip">
+            <string>Complete pick task</string>
+           </property>
+           <property name="text">
+            <string>PickDone</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="placeDone">
+           <property name="toolTip">
+            <string>Complete place task</string>
+           </property>
+           <property name="text">
+            <string>PlaceDone</string>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Say:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPlainTextEdit" name="textSay">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>27</height>
+            </size>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAsNeeded</enum>
+           </property>
+           <property name="plainText">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelStatus">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -584,7 +600,7 @@
         </layout>
        </item>
        <item>
-        <widget class="NavViewWidget" name="nav_view_widget">
+        <widget class="NavViewWidget" name="navViewWidget">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
