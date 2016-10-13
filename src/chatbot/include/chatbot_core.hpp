@@ -1,4 +1,5 @@
 using namespace std;
+#include <string>
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
@@ -6,6 +7,7 @@ using namespace std;
 #include <std_msgs/String.h>
 #include "chatbot/Respond.h"
 #include "chatbot/NamedMoveBaseAction.h"
+
 class ChatCore
 {
 public:
@@ -30,7 +32,8 @@ protected:
 
 	bool executeRespond(chatbot::RespondRequest &req, chatbot::RespondResponse & res);
 
-
+	void sendLog(const std::string& line);
+	void sendStatus(const std::string& status);
 	ros::NodeHandle nh_;
 
 	actionlib::SimpleActionServer<chatbot::NamedMoveBaseAction> gotoAs_;
@@ -41,6 +44,9 @@ protected:
 	ros::Subscriber pickSub_;
 	ros::Subscriber placeSub_;
 	ros::Publisher respondPub_;
+
+	ros::Publisher statusPub_;
+	ros::Publisher logPub_;
 
 	ros::ServiceServer respondSrv_;
 };
