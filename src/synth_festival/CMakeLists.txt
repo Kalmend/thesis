@@ -11,12 +11,13 @@ find_package(catkin REQUIRED COMPONENTS
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH};")
 find_package(Festival REQUIRED)
 find_package(EST REQUIRED)
+find_package(Boost REQUIRED COMPONENTS locale)
 
 catkin_package()
-include_directories(include ${catkin_INCLUDE_DIRS} ${Festival_INCLUDE_DIR} ${EST_INCLUDE_DIR})
+include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Festival_INCLUDE_DIR} ${EST_INCLUDE_DIR})
 
 add_executable(synth_festival src/synth_festival.cpp)
-target_link_libraries(synth_festival ${catkin_LIBRARIES} ${Festival_LIBRARIES} ${EST_LIBRARIES})
+target_link_libraries(synth_festival ${catkin_LIBRARIES} ${Festival_LIBRARIES} ${EST_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(synth_festival ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS synth_festival
