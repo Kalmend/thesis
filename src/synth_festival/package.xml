@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+  <name>synth_festival</name>
+  <version>0.0.0</version>
+  <description>The festival synthesizer based ros node</description>
+  <maintainer email="kalmendoliver@gmail.com">Oliver Kalmend</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>festival-dev</build_depend>
+  <run_depend>festival-dev</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+
+  <export>
+  </export>
+</package>

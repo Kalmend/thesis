@@ -1,18 +1,15 @@
-#include <gst/gst.h>
 #include <ros/ros.h>
-#include <boost/thread.hpp>
-#include <gst/app/gstappsink.h>
-#include <std_msgs/String.h>
-
-class SpeechRecognitionSimple
+#include <festival.h>
+class SynthesizerFestival
 {
 public:
-	SpeechRecognitionSimple();
-	~SpeechRecognitionSimple();
+	SynthesizerFestival();
+	~SynthesizerFestival();
 
 
 private:
 
+/*
 	static gboolean onBusMessage(GstBus* bus, GstMessage* msg, gpointer userData);
 	static GstFlowReturn onNewRecognition (GstAppSink *appsink, gpointer userData);
 
@@ -24,7 +21,9 @@ private:
 	GstElement* getSpeechRecognition();
 
 	std::string destination_type_;
+*/
 	//arguments
+/*
 	struct SRArguments
 	{
 		bool threaded_decoder;
@@ -44,14 +43,18 @@ private:
 		float acoustic_scale;
 		float traceback_period_in_secs;
 	} sr_arguments_;
+*/
 	//ROS stuff
+/*
 	ros::ServiceClient serviceClient_;
 	ros::NodeHandle nh_;
 	ros::Publisher pub_;
-
+*/
 	//pipeline elements
+/*
 	GstElement *pipeline_, *source_, *sink_, *resample_, *convert_, *recog_;
 
 	boost::thread gst_thread_;
 	GMainLoop *loop_;
+*/
 };
