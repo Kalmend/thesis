@@ -9,6 +9,9 @@
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>festival-dev</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
   <run_depend>festival-dev</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>

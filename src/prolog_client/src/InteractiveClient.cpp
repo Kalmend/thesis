@@ -36,7 +36,7 @@ InteractiveClient::InteractiveClient() :
 		gotoAc_("goto", false),
 		pickAc_("pick", false),
 		placeAc_("place", false),
-		respondSrv_(nh_.serviceClient<chatbot::Respond>("respond")),
+		respondClient_(nh_.serviceClient<chatbot::Respond>("respond")),
 		stubTimer_(nh_.createTimer(ros::Duration(0.1), &InteractiveClient::stubCb, this, true, false)),
 		actionInProgress_(false)
 {
@@ -76,7 +76,7 @@ void InteractiveClient::init()
 
 		initChatCore();
 		initInputOutput();
-		sub_ = getNodeHandle().subscribe("/recognition/raw_result", 10, &InteractiveClient::onRawSpeech, this);
+		sub_ = nh_.subscribe("recognition/raw_result", 10, &InteractiveClient::onRawSpeech, this);
 		std::cout << "Subscribed to /recognition/raw_result for input." << std::endl;
 		std::cout << "Type prolog queries here." << std::endl;
 		std::cout << "Or use the prefix \"raw:\" to simulate ROS msg." << std::endl;
@@ -352,7 +352,7 @@ void InteractiveClient::placeSend(const std::string& object, float x, float y)
 
 void InteractiveClient::respondSend(const std::string & response)
 {
-	if (!respondSrv_.exists())
+	if (!respondClient_.exists())
 	{
 		ROS_WARN("PrologRobotInterface::respondSend: chatbot respond service not found, returning.");
 		return;
@@ -361,7 +361,7 @@ void InteractiveClient::respondSend(const std::string & response)
 	chatbot::Respond res;
 	res.request.str = response;
 	ROS_INFO("PrologRobotInterface::respondSend: %s.", response.c_str());
-	respondSrv_.call(res);
+	respondClient_.call(res);
 	ROS_INFO("PrologRobotInterface::respondSend: done!");
 }
 

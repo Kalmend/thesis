@@ -87,7 +87,7 @@ private:
 	actionlib::SimpleActionClient<chatbot::NamedMoveBaseAction> gotoAc_;
 	actionlib::SimpleActionClient<chatbot::NamedMoveBaseAction> pickAc_;
 	actionlib::SimpleActionClient<chatbot::NamedMoveBaseAction> placeAc_;
-	ros::ServiceClient respondSrv_;
+	ros::ServiceClient respondClient_;
 	ros::Timer stubTimer_;
 	bool actionInProgress_;
 

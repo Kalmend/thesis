@@ -2,10 +2,12 @@
 <launch>
 	<arg name="config_file" default="$(find prolog_server)/config/mt_server.yaml"/>
 	<arg name="output" default="log"/>
+	<arg name="no_recognition"  default="false" />
+	<arg name="no_voice"  default="false" />
 
 	<!--voice capture-->
 	<env name="GST_PLUGIN_PATH" value="$(find speech_recognition_simple)/../../deps" />
-	<node name="chatbot_speech_recognition" pkg="speech_recognition_simple" type="speech_recognition_simple" output="$(arg output)">
+	<node unless="$(arg no_recognition)" name="chatbot_speech_recognition" pkg="speech_recognition_simple" type="speech_recognition_simple" output="$(arg output)">
 		<param name="model_dir" value="$(find speech_recognition_simple)/../../deps" />
 	</node>
 	
@@ -28,4 +30,6 @@
 	<!-- gui -->
 	<node name="chatbot_gui" pkg="chatbot_gui" type="chatbot_gui" output="$(arg output)"/>
 	
+	<!-- synth -->
+	<node unless="$(arg no_voice)" name="synth_festival" pkg="synth_festival" type="synth_festival" output="$(arg output)"/>
 </launch>

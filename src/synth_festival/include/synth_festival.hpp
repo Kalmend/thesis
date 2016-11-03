@@ -1,14 +1,17 @@
 #include <ros/ros.h>
 #include <festival.h>
+#include <std_msgs/String.h>
+
 class SynthesizerFestival
 {
 public:
 	SynthesizerFestival();
 	~SynthesizerFestival();
 
-
 private:
-
+	ros::NodeHandle nh_;
+	ros::Subscriber respondSub_;
+	void onSpeech(const std_msgs::String &msg);
 /*
 	static gboolean onBusMessage(GstBus* bus, GstMessage* msg, gpointer userData);
 	static GstFlowReturn onNewRecognition (GstAppSink *appsink, gpointer userData);

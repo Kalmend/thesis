@@ -2,6 +2,7 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/format.hpp>
+
 using namespace std;
 using boost::format;
 using boost::str;
@@ -13,9 +14,10 @@ ChatCore::ChatCore() :
 	gotoAc_(nh_, "move_base", false),
 	pickSub_(nh_.subscribe("picker", 1, &ChatCore::pickDoneCb, this)),
 	placeSub_(nh_.subscribe("placer", 1, &ChatCore::placeDoneCb, this)),
-	respondPub_(nh_.advertise<std_msgs::String>("responder", 10)),
+	respondPub_(nh_.advertise<std_msgs::String>("synthesizer/text_to_speak", 10)),
 	statusPub_(nh_.advertise<std_msgs::String>("chatbot_gui/status", 10)),
-	logPub_(nh_.advertise<std_msgs::String>("chatbot_gui/log", 10))
+	logPub_(nh_.advertise<std_msgs::String>("chatbot_gui/log", 10)),
+	respondSrv_(nh_.advertiseService("/respond", &ChatCore::executeRespond, this))
 {
 	gotoAs_.registerGoalCallback( boost::bind(&ChatCore::goalGotoCB, this));
 	gotoAs_.registerPreemptCallback(boost::bind(&ChatCore::preemptGotoCB, this));
@@ -29,7 +31,7 @@ ChatCore::ChatCore() :
 	gotoAs_.start();
 	pickAs_.start();
 	placeAs_.start();
-	respondSrv_ = nh_.advertiseService("/respond", &ChatCore::executeRespond, this);
+
 }
 
 void ChatCore::goalGotoCB()
