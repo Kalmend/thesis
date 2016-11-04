@@ -3,6 +3,7 @@
 #include <boost/thread.hpp>
 #include <gst/app/gstappsink.h>
 #include <std_msgs/String.h>
+#include <std_srvs/SetBool.h>
 
 class SpeechRecognitionSimple
 {
@@ -17,7 +18,7 @@ private:
 	static GstFlowReturn onNewRecognition (GstAppSink *appsink, gpointer userData);
 
 	void publish( const std_msgs::String &msg );
-
+	bool setPause(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse & res);
 	void exitOnMainThread(const std::string & message, int code);
 	void parseArguments();
 	void setupPipeline();
@@ -48,7 +49,8 @@ private:
 	ros::ServiceClient serviceClient_;
 	ros::NodeHandle nh_;
 	ros::Publisher pub_;
-
+	ros::ServiceServer pauseSrv_;
+	bool paused_;
 	//pipeline elements
 	GstElement *pipeline_, *source_, *sink_, *resample_, *convert_, *recog_;
 

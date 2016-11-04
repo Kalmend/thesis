@@ -2,10 +2,11 @@
 
 using namespace std;
 
-SpeechRecognitionSimple::SpeechRecognitionSimple()
+SpeechRecognitionSimple::SpeechRecognitionSimple() : paused_(false)
 {
 	parseArguments();
 	pub_ = nh_.advertise<std_msgs::String>("raw_result", 10, true);
+	pauseSrv_ = nh_.advertiseService("set_pause", &SpeechRecognitionSimple::setPause, this);
 	loop_ = g_main_loop_new(NULL, false);
 	setupPipeline();
 	gst_element_set_state(GST_ELEMENT(pipeline_), GST_STATE_PLAYING);
@@ -29,7 +30,8 @@ gboolean SpeechRecognitionSimple::onBusMessage(GstBus* bus, GstMessage* msg, gpo
 	{
 	case GST_MESSAGE_EOS:
 	{
-		ROS_INFO("End-of-stream");
+		ROS_INFO("SpeechRecognitionSimple::onBusMessage: End-of-stream");
+		break;
 	}
 	case GST_MESSAGE_ERROR:
 	{
@@ -70,13 +72,30 @@ GstFlowReturn SpeechRecognitionSimple::onNewRecognition(
 
 void SpeechRecognitionSimple::publish( const std_msgs::String &msg )
 {
+	if(paused_)
+	{
+		ROS_INFO("SpeechRecognitionSimple::publish: paused, returning.");
+		return;
+	}
 	pub_.publish(msg);
+}
+
+bool SpeechRecognitionSimple::setPause(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse & res)
+{
+	ROS_INFO("SpeechRecognitionSimple::setPause: %u", req.data);
+	paused_ = req.data;
+	if(paused_)
+		gst_element_set_state(GST_ELEMENT(pipeline_), GST_STATE_PAUSED);
+	else
+		gst_element_set_state(GST_ELEMENT(pipeline_), GST_STATE_PLAYING);
+	res.success = true;
+	return true;
 }
 
 
 void SpeechRecognitionSimple::exitOnMainThread(const std::string &message, int code)
 {
-	ROS_ERROR("%s\n", message.c_str());
+	ROS_ERROR("SpeechRecognitionSimple::exitOnMainThread: %s\n", message.c_str());
 	exit(code);
 }
 
@@ -166,7 +185,7 @@ void SpeechRecognitionSimple::setupPipeline()
 
 void SigIntHandler(int sig)
 {
-	ROS_INFO("play_audio_speex sigint handler");
+	ROS_INFO("SpeechRecognitionSimple::SigIntHandler: play_audio_speex sigint handler");
 	ros::shutdown();
 }
 
