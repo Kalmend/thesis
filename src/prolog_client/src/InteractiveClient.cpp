@@ -1,6 +1,7 @@
 #include "prolog_client/InteractiveClient.h"
 #include <prolog_serialization/PrologSerializer.h>
 #include <prolog_client/Query.h>
+#include <roscpp_nodewrap/worker/WorkerQueueCallback.h>
 
 #include <iostream>
 #include <sstream>
@@ -10,6 +11,7 @@
 #include <sstream>
 
 #include <chatbot/Respond.h>
+
 
 static inline std::string &rtrim(std::string &s)
 {
@@ -31,6 +33,7 @@ namespace client
 InteractiveClient::InteractiveClient() :
 		inputStream_(ioService_, dup(STDIN_FILENO)),
 		inputColumn_(0),
+		queryNumber_(0),
 		inputFile_(""),
 		outputFile_(""),
 		gotoAc_("goto", false),
@@ -38,7 +41,8 @@ InteractiveClient::InteractiveClient() :
 		placeAc_("place", false),
 		respondClient_(nh_.serviceClient<chatbot::Respond>("respond")),
 		stubTimer_(nh_.createTimer(ros::Duration(0.1), &InteractiveClient::stubCb, this, true, false)),
-		actionInProgress_(false)
+		actionInProgress_(false),
+		taskInProgress_(false)
 {
 }
 
@@ -80,7 +84,6 @@ void InteractiveClient::init()
 		std::cout << "Subscribed to /recognition/raw_result for input." << std::endl;
 		std::cout << "Type prolog queries here." << std::endl;
 		std::cout << "Or use the prefix \"raw:\" to simulate ROS msg." << std::endl;
-		;
 		std::cout << "Use 'halt.' to exit the client." << std::endl;
 		std::cout << "\n";
 		startInput();
@@ -109,10 +112,15 @@ void InteractiveClient::initInputOutput()
 {
 	inputFile_ = getParam(ros::names::append("prolog", "input_file"), std::string(INPUT_FILE));
 	outputFile_ = getParam(ros::names::append("prolog", "output_file"), std::string(OUTPUT_FILE));
+	taskFile_ = getParam(ros::names::append("prolog", "task_file"), std::string(TASK_FILE));
+
 	doQuery("kill_current_task.");
-	if (!doQuery("change_input_filename('" + inputFile_ + "').") || !doQuery("change_output_filename('" + outputFile_ + "')."))
+	if (!doQuery("change_input_filename('" + inputFile_ + "').")
+			|| !doQuery("change_output_filename('" + outputFile_ + "').")
+			|| !doQuery("change_task_filename('" + taskFile_ + "').")
+			)
 	{
-		ROS_ERROR("PrologRobotInterface::initInputOutput: Could not set either input or output file location for swi-prolog server.");
+		ROS_ERROR("PrologRobotInterface::initInputOutput: Could not set prolog files.");
 		ros::shutdown();
 	}
 	cleanOutput();
@@ -121,7 +129,7 @@ void InteractiveClient::initInputOutput()
 void InteractiveClient::onRawSpeech(const std_msgs::String &msg)
 {
 	ROS_INFO("PrologRobotInterface::onRawSpeech: %s", msg.data.c_str());
-	ROS_INFO("PrologRobotInterface::onRawSpeech: query result: %u", execute(msg.data.c_str()));
+	ROS_INFO("PrologRobotInterface::onRawSpeech: query result: %u", queryReaction(msg.data.c_str()));
 }
 
 void InteractiveClient::cleanup()
@@ -171,16 +179,33 @@ void InteractiveClient::handleInput(const boost::system::error_code& error, size
 	}
 }
 
-bool InteractiveClient::execute(const std::string& rawInput)
+bool InteractiveClient::queryReaction(const std::string& rawInput)
 {
-	if (doQuery("is_task_in_progress."))
-		return "job already in progress, ignoring!"; //we don't want to do anything if task already in progress
-
 	toInput(trimGarbage(rawInput));
-	bool result = doQuery("t.");
-	handleOutput();
+	bool result = doQuery("t(" + std::to_string(queryNumber_++) + ").");
+	handleTask();
+	scheduleProcessQueue();
 	return result;
 }
+
+bool InteractiveClient::executeReaction(const std::string& rawTask, bool async)
+{
+	std::string prefix = "";
+	if(async)
+	{
+		if (taskInProgress_)
+		{
+			ROS_ERROR("PrologRobotInterface::executeReaction: reaction task already in progress. aborting!");
+			ros::shutdown();
+		}
+		taskInProgress_ = true;
+		prefix = "async_";
+	}
+	bool result = doQuery(prefix.append(rawTask));
+	handleOutput(async);
+	return result;
+}
+
 
 bool InteractiveClient::doQuery(const std::string& queryString)
 {
@@ -202,8 +227,8 @@ bool InteractiveClient::doQuery(const std::string& queryString)
 				return solution.isValid();
 			} catch (const ros::Exception& exception)
 			{
-				query.close();
 				ROS_ERROR("PrologRobotInterface::doQuery: exception:%s", exception.what());
+				query.close();
 				ros::shutdown();
 				throw exception;
 			}
@@ -211,13 +236,30 @@ bool InteractiveClient::doQuery(const std::string& queryString)
 	}
 }
 
+
+void InteractiveClient::signalDone()
+{
+	doQuery("signal_done.");
+}
+
 void InteractiveClient::cleanupThreadIfDone()
 {
 	doQuery("cleanup_if_done.");
 }
-void InteractiveClient::signalDone()
+
+void InteractiveClient::cancelCurrentTask()
 {
-	doQuery("signal_done.");
+	//cleanup task prolog part
+	while(doQuery("is_task_in_progress."))
+		signalDone();
+	taskInProgress_ = false;
+	cleanOutput();
+	cleanupThreadIfDone();
+
+	//cleanup in progress actions goto pick place
+	pickAc_.cancelAllGoals();
+	placeAc_.cancelAllGoals();
+	gotoAc_.cancelAllGoals();
 }
 
 //calls to robot
@@ -231,7 +273,7 @@ void InteractiveClient::stubCb(const ros::TimerEvent& event)
 	actionInProgress_ = false;
 	ROS_WARN("PrologRobotInterface::stubCb() fired!");
 	signalDone();
-	handleOutput();
+	handleOutput(false);
 }
 
 void InteractiveClient::gotoDoneCb(const actionlib::SimpleClientGoalState& state, const chatbot::NamedMoveBaseResultConstPtr &result)
@@ -243,8 +285,11 @@ void InteractiveClient::gotoDoneCb(const actionlib::SimpleClientGoalState& state
 	}
 	actionInProgress_ = false;
 	ROS_INFO("PrologRobotInterface::gotoDoneCb: %s", state.toString().c_str());
-	signalDone();
-	handleOutput();
+	if(state == actionlib::SimpleClientGoalState::SUCCEEDED)
+	{
+		signalDone();
+		handleOutput();
+	}
 }
 
 void InteractiveClient::gotoSend(const std::string& dest, float x, float y)
@@ -283,8 +328,11 @@ void InteractiveClient::pickDoneCb(const actionlib::SimpleClientGoalState& state
 	}
 	actionInProgress_ = false;
 	ROS_INFO("PrologRobotInterface::pickDoneCb: %s", state.toString().c_str());
-	signalDone();
-	handleOutput();
+	if(state == actionlib::SimpleClientGoalState::SUCCEEDED)
+	{
+		signalDone();
+		handleOutput();
+	}
 }
 
 void InteractiveClient::pickSend(const std::string& object, float x, float y)
@@ -321,8 +369,11 @@ void InteractiveClient::placeDoneCb(const actionlib::SimpleClientGoalState& stat
 	}
 	actionInProgress_ = false;
 	ROS_INFO("PrologRobotInterface::placeDoneCb: %s", state.toString().c_str());
-	signalDone();
-	handleOutput();
+	if(state == actionlib::SimpleClientGoalState::SUCCEEDED)
+	{
+		signalDone();
+		handleOutput();
+	}
 }
 
 void InteractiveClient::placeSend(const std::string& object, float x, float y)
@@ -362,8 +413,27 @@ void InteractiveClient::respondSend(const std::string & response)
 	res.request.str = response;
 	ROS_INFO("PrologRobotInterface::respondSend: %s.", response.c_str());
 	respondClient_.call(res);
-	ROS_INFO("PrologRobotInterface::respondSend: done!");
+	scheduleRespondDoneCb();
+
 }
+
+void InteractiveClient::respondDoneCb()
+{
+	//unused funciton, in case we need to schedule respond
+	ROS_INFO("PrologRobotInterface::respondSend: done!");
+	handleOutput(false);
+}
+
+void InteractiveClient::scheduleRespondDoneCb()
+{
+	ros::VoidConstPtr trackedObject;
+	ros::CallbackInterfacePtr callback(
+	new nodewrap::WorkerQueueCallback(boost::bind(&InteractiveClient::respondDoneCb, this), trackedObject,false)
+		);
+
+	nh_.getCallbackQueue()->addCallback(callback);
+}
+
 
 std::string InteractiveClient::getCommaSeparatedString(std::string input) const
 {
@@ -420,18 +490,89 @@ void InteractiveClient::toInput(const std::string& input)
 	inputFile.close();
 }
 
-std::string InteractiveClient::getOutput()
+std::string InteractiveClient::getTask()
 {
+	std::string task = getFile(taskFile_);
+	task.erase(std::find_if(task.rbegin(), task.rend(),
+	            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), task.end());
+	return task;
+}
 
-	doQuery("are_files_free.");
-	std::ifstream f(outputFile_);
-	std::stringstream ss;
-	if (f)
+void InteractiveClient::handleTask()
+{
+	std::string task = getTask();
+	if (task.length())
 	{
-		ss << f.rdbuf();
-		f.close();
+		ROS_INFO("PrologRobotInterface::parseTask: task_file:");
+		ROS_INFO("\n%s", task.c_str());
+		parseTask(task);
 	}
-	return ss.str();
+	cleanTask();
+}
+
+void InteractiveClient::parseTask(const std::string& taskString)
+{
+	queuedTasks_.emplace(taskString);
+}
+
+void InteractiveClient::scheduleProcessQueue()
+{
+	ros::VoidConstPtr trackedObject;
+	ros::CallbackInterfacePtr callback(
+	new nodewrap::WorkerQueueCallback(boost::bind(&InteractiveClient::processQueue, this), trackedObject,false)
+		);
+
+	nh_.getCallbackQueue()->addCallback(callback);
+}
+
+void InteractiveClient::processQueue()
+{
+	 while( !queuedTasks_.empty() )
+	 {
+
+		 if(queuedTasks_.top().synchronous)
+		 {
+			 executeReaction(queuedTasks_.top().task, false);
+			 queuedTasks_.pop();
+			 continue;
+		 }
+
+		 if(queuedTasks_.top().priority <= currentTask_.priority)
+		 {
+			 if(taskInProgress_ || actionInProgress_)
+			 {
+				 cancelCurrentTask();
+				 scheduleProcessQueue();
+				 return;
+			 }
+			 currentTask_ = queuedTasks_.top();
+			 executeReaction(queuedTasks_.top().task);
+			 queuedTasks_.pop();
+		 }
+		 break;
+	 }
+}
+
+void InteractiveClient::cleanTask()
+{
+	cleanFile(taskFile_);
+}
+
+void InteractiveClient::handleOutput(bool async)
+{
+	cleanupThreadIfDone();
+	std::string output = getOutput();
+	if (output.length())
+	{
+		ROS_INFO("PrologRobotInterface::handleOutput: output_file:");
+		ROS_INFO("\n%s", output.c_str());
+		parseOutput(output);
+	} else if (async && taskInProgress_)
+	{
+		taskInProgress_ = false;
+		scheduleProcessQueue();
+	}
+	cleanOutput();
 }
 
 void InteractiveClient::parseOutput(const std::string& output)
@@ -466,6 +607,7 @@ void InteractiveClient::parseOutput(const std::string& output)
 	}
 }
 
+
 std::vector<std::string> InteractiveClient::parseArguments(const std::string& arguments) const
 {
 	std::vector<std::string> result;
@@ -482,24 +624,36 @@ std::vector<std::string> InteractiveClient::parseArguments(const std::string& ar
 	return result;
 }
 
-void InteractiveClient::cleanOutput()
+std::string InteractiveClient::getOutput()
 {
-	std::ofstream outputFile;
-	outputFile.open(outputFile_.c_str(), std::ios::trunc);
-	outputFile.close();
+	return getFile(outputFile_);
 }
 
-void InteractiveClient::handleOutput()
+std::string InteractiveClient::getFile(const std::string& file)
 {
-	cleanupThreadIfDone();
-	std::string output = getOutput();
-	if (output.length())
+
+	doQuery("are_files_free.");
+	std::ifstream f(file);
+	std::stringstream ss;
+	if (f)
 	{
-		ROS_INFO("PrologRobotInterface::handleOutput: output_file:");
-		ROS_INFO("\n%s", output.c_str());
-		parseOutput(output);
+		ss << f.rdbuf();
+		f.close();
 	}
-	cleanOutput();
+	return ss.str();
 }
+
+void InteractiveClient::cleanOutput()
+{
+	cleanFile(outputFile_);
+}
+
+void InteractiveClient::cleanFile(const std::string& file)
+{
+	std::ofstream fileStream;
+	fileStream.open(file.c_str(), std::ios::trunc);
+	fileStream.close();
+}
+
 }
 }

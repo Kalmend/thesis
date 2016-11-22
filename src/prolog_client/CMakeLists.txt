@@ -29,20 +29,25 @@ catkin_package(
     roscpp_nodewrap
 )
 
-IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../HR_dialogue5.pl)
-    message( FATAL_ERROR "Could not find chat core! missing "  ${CMAKE_SOURCE_DIR}/../HR_dialogue5.pl )
-ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../HR_dialogue5.pl)
-add_definitions(-DCHAT_CORE="${CMAKE_SOURCE_DIR}/../HR_dialogue5.pl")
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl)
+    message( FATAL_ERROR "Could not find chat core! missing "  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl )
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl)
+add_definitions(-DCHAT_CORE="${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl")
 
-IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../input.txt)
-    file(WRITE ${CMAKE_SOURCE_DIR}/../input.txt)
-ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../input.txt)
-add_definitions(-DINPUT_FILE="${CMAKE_SOURCE_DIR}/../input.txt")
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/input.txt)
+    file(WRITE ${CMAKE_SOURCE_DIR}/../prolog_files/input.txt)
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/input.txt)
+add_definitions(-DINPUT_FILE="${CMAKE_SOURCE_DIR}/../prolog_files/input.txt")
 
-IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../output.txt)
-    file(WRITE ${CMAKE_SOURCE_DIR}/../output.txt)
-ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../output.txt)
-add_definitions(-DOUTPUT_FILE="${CMAKE_SOURCE_DIR}/../output.txt")
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/output.txt)
+    file(WRITE ${CMAKE_SOURCE_DIR}/../prolog_files/output.txt)
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/output.txt)
+add_definitions(-DOUTPUT_FILE="${CMAKE_SOURCE_DIR}/../prolog_files/output.txt")
+
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/task.txt)
+    file(WRITE ${CMAKE_SOURCE_DIR}/../prolog_files/task.txt)
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/task.txt)
+add_definitions(-DTASK_FILE="${CMAKE_SOURCE_DIR}/../prolog_files/task.txt")
 
 include_directories(
   include
