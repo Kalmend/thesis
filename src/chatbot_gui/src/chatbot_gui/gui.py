@@ -4,8 +4,15 @@ import rospkg
 
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
-from python_qt_binding.QtGui import QWidget, QStandardItemModel, QStandardItem
-from python_qt_binding.QtGui import QPlainTextEdit
+
+from python_qt_binding.QtGui import QStandardItemModel, QStandardItem
+
+try:
+    from python_qt_binding.QtGui import QWidget, QPlainTextEdit
+except ImportError:
+    from python_qt_binding.QtWidgets import QWidget, QPlainTextEdit
+
+
 from python_qt_binding.QtCore import Qt, QVariant, QDateTime
 from .nav_view import NavViewWidget
 from std_msgs.msg import String
