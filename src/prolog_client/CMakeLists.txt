@@ -57,10 +57,11 @@ include_directories(
 add_library(
   prolog_client
     src/Client.cpp
-    src/InteractiveClient.cpp
+    src/RobotPrologConnection.cpp
     src/Query.cpp
     src/QueryProxy.cpp
     src/ServiceClient.cpp
+    src/PrioritizedTask.cpp
 )
 
 target_link_libraries(

@@ -295,6 +295,7 @@ interpret_command(N,ToR, FromR,_,_):-
 reaction(_,ToR,_, respond):-
 	respond(ToR,[ei,saanud,sellest,lausest,aru]), !.
 reaction(_,ToR, _,stop):-
+	respond(ToR,[peatan,tegevuse]),
 	stop(ToR),!.
 reaction(N,ToR, FromR,juhata):-
 	goal(N,_,CC0,_,CC2,CC2P,_,_,_),
@@ -528,28 +529,28 @@ update(N,Context,[Entity|_]):-		% Kontekstimuutuja värskendamine
 */% ======================= END UPDATING CONTEXT VARIABLES =======================
 
 stop(ToR):-						% Robot peatab kõik jooksvad tegevused
-	open( ToR, write,H2),
+	open( ToR, append, H2),
 	write(H2,'STOP'), nl(H2),
 	close(H2),!.
 goto( ToR,Place,XYZQ):-			% mine positsioonile XYZQ
-	open( ToR, write,H2),
+	open( ToR, append, H2),
 		goal(_,_,_,_,_,_,CC3,_,_),
 %	cc3(CC3),
 	write(H2,'GOTO: '), write(H2,[Place,with,coordinates,XYZQ,CC3]),nl(H2),
 	write('GOTO: '),    write([Place,with,coordinates,XYZQ,CC3]),nl,
 	close(H2),!.
 pick( ToR,Object,XYZQ):-		% objekti haaramine positsioonilt XYZQ
-	open( ToR, write,H2),
+	open( ToR, append, H2),
 	write(H2,'PICK: '),  write(H2,[Object,from, XYZQ]), nl(H2),
 	write('PICK: '),     write([Object,from, XYZQ]),	nl,
 	close(H2),!.
 place_to( ToR, Object, XYZQ):-	% objekti asetamine positsioonile XYZQ
-	open( ToR, write,H2),
+	open( ToR, append, H2),
 	write(H2,'PLACE: '), write(H2,[Object,to, XYZQ]),	nl(H2),
 	write('PLACE: '),	 write([Object,to, XYZQ]),		nl,
 	close(H2),!.
 respond( ToR, Text):-
-	open( ToR, write,H2),
+	open( ToR, append, H2),
 	write(H2,'RESPOND: '), write(H2,Text),	nl(H2),
 	write('RESPOND: '),	write(Text),	nl,
 	close(H2),!.										% robot vastab lausega

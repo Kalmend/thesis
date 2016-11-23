@@ -18,12 +18,12 @@
 
 #include <roscpp_nodewrap/Node.h>
 
-#include "prolog_client/InteractiveClient.h"
+#include "prolog_client/RobotPrologConnection.h"
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "interactive_prolog_client");
   
-  nodewrap::Node<prolog::client::InteractiveClient> node;
+  nodewrap::Node<RobotPrologConnection> node;
 
   ros::spin();
     
