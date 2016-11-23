@@ -107,7 +107,7 @@ void RobotPrologConnection::abortAllTasks()
 	{
 		currentTask_ = nullptr;
 	}
-	queuedTasks_= {};
+	queuedTasks_= std::priority_queue<std::shared_ptr<PrioritizedTask>, std::vector<std::shared_ptr<PrioritizedTask>>, TaskCompare>();
 
 
 }
