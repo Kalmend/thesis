@@ -17,9 +17,9 @@
 	</node>
 	
 	<!-- client -->
-	<node name="prolog_client" pkg="prolog_client" type="interactive_client_node" output="$(arg output)">
-                <rosparam command="load" file="$(arg config_file)"/>
-        </node>
+	<!-- node name="prolog_client" pkg="prolog_client" type="interactive_client_node" output="$(arg output)"-->
+                <!--rosparam command="load" file="$(arg config_file)"/-->
+        <!--/node-->
 
 	<!-- chatbot -->
 	<node name="chatbot" pkg="chatbot" type="chatbot" output="$(arg output)"/>

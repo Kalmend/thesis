@@ -283,7 +283,8 @@ void AsyncTask::run()
 	if (cmds.empty())
 	{
 		ROS_ERROR("AsyncTask::run: no commands in reaction, NOOP.");
-		running = false;
+		prologCleanupThreadIfDone();
+		taskFinished();
 		return;
 	}
 	bool gotAsyncCommand = false;
@@ -302,6 +303,7 @@ void AsyncTask::run()
 	if(!gotAsyncCommand)
 	{
 		ROS_ERROR("AsyncTask::run: no async command in async task, ending task.");
+		prologCleanupThreadIfDone();
 		taskFinished();
 	}
 

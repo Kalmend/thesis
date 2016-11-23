@@ -298,6 +298,7 @@ reaction(_,ToR, _,stop):-
 	respond(ToR,[peatan,tegevuse]),
 	stop(ToR),!.
 reaction(N,ToR, FromR,juhata):-
+	respond(ToR,[juhatan]),
 	goal(N,_,CC0,_,CC2,CC2P,_,_,_),
 %	cc0(CC0),
 	retract(world(CC0, Idx0, _, XYZQ0,_)),	% keda juhatada
@@ -371,7 +372,7 @@ reaction(N, ToR, FromR,tule1):-
 	append([sain,aru,tulen],CC3TXT,Answer),
 	respond(ToR,Answer),
 	asserta(world(me,Idxme,Idx0,XYZQ0,CC3)),
-	goto(ToR, CC0Nim,XYZQ0), wait(FromR),!.
+	goto(ToR, CC0Nim,XYZQ0), wait(FromR), !.
 reaction(N, ToR, _,tule2):-
 	goal(N,_,_,_,CC2,_,CC3,_,_),
 %	cc2(CC2), cc3(CC3),
@@ -380,7 +381,7 @@ reaction(N, ToR, _,tule2):-
 	retract(world(me,Idx0,_,_,_)),
 	asserta(world(me,Idx0,Idx2,XYZQ2,CC3)),
 	respond(ToR,[sain,aru,tulen,kohe,CC2,juurde]),
-	goto(ToR, CC2Nim,XYZQ2), !.
+	goto(ToR, CC2Nim,XYZQ2), wait(FromR), !.
 reaction(N, ToR, FromR,otsi_leia):-
 	goal(N,_,_,_,CC2,_,_,_,CCx),
 %	ccx(CCx), cc2(CC2),
@@ -411,7 +412,7 @@ reaction(N, ToR, _,võta_haara):-
 	world(CC0Nim, _, _, XYZQ0, _),
 %	cc1(CC1),
 	retract(world(CC1,Idx1,_,_,_)),
-	pick(ToR,CC1, XYZQ0),
+	pick(ToR,CC1, XYZQ0), wait(FromR),
 	world(me,Idxme,_,XYZQme,_),
 	get_time(Time),
 	asserta(world(CC1,Idx1,Idxme,XYZQme,Time)),
@@ -423,8 +424,7 @@ reaction(N, ToR, FromR,tõsta_pane):-
 	find_case(CC2Nim,_,CC2),
 	world(CC2Nim,Idx2,_,XYZQ2,_),
 	respond(ToR,[hästi, panen]),
-	place_to(ToR,CC1, XYZQ2),
-	wait(FromR),
+	place_to(ToR,CC1, XYZQ2), wait(FromR),
 	retract(world(CC1,Idx1,_,_,_)),
 	get_time(TS),
 	asserta(world(CC1,Idx1,Idx2,XYZQ2,TS)),!.
@@ -441,9 +441,9 @@ reaction(N, ToR, FromR,too):-
 	pick(ToR,CC1,XYZQ1), wait(FromR),
 	find_case(CC0Nim,_,CC0),
 	world(CC0Nim,Idx0,_,XYZQ0,_),
-	goto(ToR,CC0Nim,XYZQ0),
+	goto(ToR,CC0Nim,XYZQ0), wait(FromR),
 	respond(ToR,[palun, võta,CC1]),
-	place_to(ToR,CC1, XYZQ0),
+	place_to(ToR,CC1, XYZQ0), wait(FromR),
 	retract(world(CC1,Idx1,_,_,_)),
 	get_time(TS),
 	asserta(world(CC1,Idx1,Idx0,XYZQ0,TS)),!.
@@ -456,10 +456,10 @@ reaction(N, ToR, FromR,vii):-
 	world(CCxNim,Idxx,_,XYZQx,_),
 	find_case(CC1,2,CC1Om),
 	respond(ToR,[hästi, viin, CC1Om,ära]),
-	pick(ToR,CC1, XYZQ1),
+	pick(ToR,CC1, XYZQ1), wait(FromR),
 	goto(ToR,CCxNim,XYZQx), wait(FromR),
 	respond(ToR,[palun,võta,CC1]),
-	place_to(ToR,CC1, XYZQx),
+	place_to(ToR,CC1, XYZQx), wait(FromR),
 	retract(world(CC1,Idx1,_,_,_)),
 	get_time(TS),
 	asserta(world(CC1,Idx1,Idxx,XYZQx,TS)),

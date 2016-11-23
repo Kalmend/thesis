@@ -225,7 +225,7 @@ struct ReactionFactory
 		}
 		else if (commandType == "liigu_mine")
 		{
-			return std::make_shared<AsyncTask>(3, rpConnection, taskString);
+			return std::make_shared<AsyncTask>(4, rpConnection, taskString);
 		}
 		else
 		{
