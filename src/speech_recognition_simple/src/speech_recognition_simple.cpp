@@ -118,10 +118,10 @@ void SpeechRecognitionSimple::parseArguments()
 	ros::param::param<string>("~ivector_extraction_config", sr_arguments_.ivector_extraction_config, sr_arguments_.model_dir + "/conf/ivector_extractor.fixed.conf");
 	ros::param::param<string>("~ep_silence_phones", sr_arguments_.ep_silence_phones, "1:2:3:4:5:6:7:8:9:10");
 
-	ros::param::param<int>("~max_active", sr_arguments_.max_active, 10000);
+	ros::param::param<int>("~max_active", sr_arguments_.max_active, 7000);
 	ros::param::param<float>("~beam", sr_arguments_.beam, 10.0);
-	ros::param::param<float>("~lattice_beam", sr_arguments_.lattice_beam, 8.0);
-	ros::param::param<float>("~chunk_length_s", sr_arguments_.chunk_length_s, 0.2);
+	ros::param::param<float>("~lattice_beam", sr_arguments_.lattice_beam, 5.0);
+	ros::param::param<float>("~chunk_length_s", sr_arguments_.chunk_length_s, 2.0);
 	ros::param::param<float>("~acoustic_scale", sr_arguments_.acoustic_scale, 0.0833);
 	ros::param::param<float>("~traceback_period_in_secs", sr_arguments_.traceback_period_in_secs, 1.0);
 }
@@ -167,7 +167,7 @@ void SpeechRecognitionSimple::setupPipeline()
 			g_signal_connect( G_OBJECT(sink_), "new-sample", G_CALLBACK(onNewRecognition), this);
 		} else {
 			sink_ = gst_element_factory_make("filesink", "sink");
-			g_object_set(G_OBJECT(sink_), "location", "/dev/stdout", NULL);
+			g_object_set(G_OBJECT(sink_), "location", destination_type_.c_str(), NULL);
 			g_object_set(G_OBJECT(sink_), "buffer-mode", 2, NULL);
 		}
 
@@ -191,7 +191,7 @@ void SigIntHandler(int sig)
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "audio_play", ros::init_options::NoSigintHandler);
+	ros::init(argc, argv, "speech_recog_simple", ros::init_options::NoSigintHandler);
 	gst_init(&argc, &argv);
 
 	SpeechRecognitionSimple client;

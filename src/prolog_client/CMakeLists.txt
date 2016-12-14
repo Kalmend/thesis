@@ -29,10 +29,10 @@ catkin_package(
     roscpp_nodewrap
 )
 
-IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl)
-    message( FATAL_ERROR "Could not find chat core! missing "  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl )
-ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl)
-add_definitions(-DCHAT_CORE="${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue5.2.pl")
+IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue6.pl)
+    message( FATAL_ERROR "Could not find chat core! missing "  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue6.pl )
+ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue6.pl)
+add_definitions(-DCHAT_CORE="${CMAKE_SOURCE_DIR}/../prolog_files/HR_dialogue6.pl")
 
 IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/input.txt)
     file(WRITE ${CMAKE_SOURCE_DIR}/../prolog_files/input.txt)

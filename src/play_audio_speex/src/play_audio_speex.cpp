@@ -102,7 +102,7 @@ private:
 
 	GstCaps* getSinkCapabilities()
 	{
-		serviceClient_ = nh_.serviceClient<capture_vad_speex::GetSinkCapabilities>("/audio_capture/get_sink_capabilities");
+		serviceClient_ = nh_.serviceClient<capture_vad_speex::GetSinkCapabilities>("/capture_vad_speex/get_sink_capabilities");
 		serviceClient_.waitForExistence();
 		capture_vad_speex::GetSinkCapabilitiesRequest req;
 		capture_vad_speex::GetSinkCapabilitiesResponse resp;

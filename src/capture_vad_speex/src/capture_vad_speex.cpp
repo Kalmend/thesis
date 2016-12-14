@@ -120,6 +120,13 @@ private:
 
 		source_ = gst_element_factory_make("alsasrc", "source");
 		convert_ = gst_element_factory_make("audioconvert", "convert");
+		resample_ = gst_element_factory_make("audioresample", "resample");
+		capsfilter_ = gst_element_factory_make("capsfilter", NULL);
+		GstCaps *caps = gst_caps_new_empty();
+		GstStructure *cs = gst_structure_new("audio/x-raw","rate", G_TYPE_INT, 32000, NULL);
+		gst_caps_append_structure(caps, cs);
+		g_object_set(G_OBJECT(capsfilter_), "caps", caps, NULL);
+		gst_caps_unref(caps);
 
 		gboolean link_ok;
 		// We create the source and add encode to speex with VAD
@@ -130,8 +137,8 @@ private:
 		g_object_set( G_OBJECT(encode_), "bitrate", bitrate_, NULL);
 		gst_pad_add_probe(GST_PAD_CAST(encode_->srcpads->data), GST_PAD_PROBE_TYPE_EVENT_BOTH, onEncoderEvent, this, NULL);
 
-		gst_bin_add_many( GST_BIN(pipeline_), source_, convert_, encode_, sink_, NULL);
-		link_ok = gst_element_link_many(source_, convert_, encode_, sink_, NULL);
+		gst_bin_add_many( GST_BIN(pipeline_), source_, convert_, resample_, capsfilter_, encode_, sink_, NULL);
+		link_ok = gst_element_link_many(source_, convert_, resample_, capsfilter_, encode_, sink_, NULL);
 
 		if (!link_ok) {
 			ROS_ERROR_STREAM("Unsupported media type.");
@@ -142,7 +149,7 @@ private:
 	void setupGetSinkCapabilitiesService()
 	{
 		storeSpeexCaps();
-		serviceSrv_ = nh_.advertiseService("/audio_capture/get_sink_capabilities", &RosGstSpeexCapture::getSinkCaps, this);
+		serviceSrv_ = nh_.advertiseService("/capture_vad_speex/get_sink_capabilities", &RosGstSpeexCapture::getSinkCaps, this);
 	}
 
 	bool getSinkCaps(capture_vad_speex::GetSinkCapabilitiesRequest &req,
@@ -166,6 +173,7 @@ private:
 		}
 		GstPad* pad =  GST_PAD_CAST(srcpads->data);
 		GstCaps* caps = gst_pad_get_current_caps(pad);
+
 		gchar* capsGchar = gst_caps_to_string (caps);
 		speexCaps_ = capsGchar;
 		g_free(capsGchar);
@@ -198,7 +206,9 @@ private:
 	//int publishBackoff_;
 
 	//pipeline elements
-	GstElement *pipeline_, *source_, *sink_, *convert_, *encode_;
+	GstElement *pipeline_, *source_, *sink_, *convert_, *resample_,  *capsfilter_, *encode_;
+
+	GstCaps *newCaps_;
 
 	boost::thread gst_thread_;
 	GMainLoop *loop_;
@@ -207,7 +217,7 @@ private:
 
 int main (int argc, char **argv)
 {
-	ros::init(argc, argv, "audio_capture");
+	ros::init(argc, argv, "capture_vad_speex");
 	gst_init(&argc, &argv);
 	RosGstSpeexCapture server;
 	ros::spin();

@@ -2,7 +2,7 @@
 <package>
   <name>speech_recognition_simple</name>
   <version>0.0.0</version>
-  <description>capture and speex recognition, withut VAD. using Alumäes plugin</description>
+  <description>All in one speech recognition</description>
   <maintainer email="kalmendoliver@gmail.com">oliver kalmend</maintainer>
   <license>BSD</license>
   
