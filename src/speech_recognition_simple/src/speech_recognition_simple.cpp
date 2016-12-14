@@ -144,8 +144,8 @@ GstElement* SpeechRecognitionSimple::getSpeechRecognition()
 	g_object_set(G_OBJECT(recog), "do-endpointing", sr_arguments_.do_endpointing, NULL);
 	g_object_set(G_OBJECT(recog), "endpoint-silence-phones", sr_arguments_.ep_silence_phones.c_str(), NULL);
 	g_object_set(G_OBJECT(recog), "chunk-length-in-secs", sr_arguments_.chunk_length_s, NULL);
-	g_object_set(G_OBJECT(recog), "acoustic-scale", sr_arguments_.acoustic_scale, NULL);
-	g_object_set(G_OBJECT(recog), "traceback-period-in-secs", sr_arguments_.traceback_period_in_secs, NULL);
+	//g_object_set(G_OBJECT(recog), "acoustic-scale", sr_arguments_.acoustic_scale, NULL);
+	//g_object_set(G_OBJECT(recog), "traceback-period-in-secs", sr_arguments_.traceback_period_in_secs, NULL);
 
 	return recog;
 }

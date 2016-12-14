@@ -42,7 +42,11 @@ from nav_msgs.msg import OccupancyGrid, Path
 from geometry_msgs.msg import PolygonStamped, PointStamped, PoseWithCovarianceStamped, PoseStamped
 
 from python_qt_binding.QtCore import Signal, Slot, QPointF, qWarning, Qt
-from python_qt_binding.QtGui import QWidget, QPixmap, QImage, QGraphicsView, QGraphicsScene, QPainterPath, QPen, QPolygonF, QVBoxLayout, QHBoxLayout, QColor, qRgb, QPushButton
+from python_qt_binding.QtGui import QPixmap, QImage, QPainterPath, QPen, QPolygonF, QColor, qRgb, QTransform
+try:
+    from python_qt_binding.QtGui import QWidget, QGraphicsView, QGraphicsScene, QVBoxLayout, QHBoxLayout, QPushButton
+except ImportError:
+    from python_qt_binding.QtWidgets import QWidget, QGraphicsView, QGraphicsScene, QVBoxLayout, QHBoxLayout, QPushButton
 
 from rqt_py_common.topic_helpers import get_field_type
 
@@ -209,10 +213,13 @@ class NavView(QGraphicsView):
 
     def wheelEvent(self, event):
         event.ignore()
-        if event.delta() > 0:
-            self.scale(1.15, 1.15)
+	numDegrees = event.angleDelta().y() / 8;
+        if numDegrees > 0:
+	    self.setTransform(QTransform.fromScale(1.15, 1.15), True)
+            #self.scale(1.15, 1.15)
         else:
-            self.scale(0.85, 0.85)
+	    self.setTransform(QTransform.fromScale(0.85, 0.85), True)
+            #self.scale(0.85, 0.85)
 
     def map_cb(self, msg):
         self.resolution = msg.info.resolution
@@ -413,8 +420,11 @@ class NavView(QGraphicsView):
             self._scene.removeItem(old_item)
 
     def _mirror(self, item):
-        item.scale(-1, 1)
-        item.translate(-self.w, 0)
+	item.setTransform(QTransform.fromScale(-1, 1), True)
+	item.setTransform(QTransform.fromTranslate(-self.w, 0), True);
+        #deprecated item.scale(-1, 1)
+	#deprecated item.translate(-self.w, 0)
+	
 
     def save_settings(self, plugin_settings, instance_settings):
         # TODO add any settings to be saved
