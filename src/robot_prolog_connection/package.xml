@@ -1,5 +1,5 @@
 <package>
-  <name>prolog_client</name>
+  <name>robot_prolog_connection</name>
   <version>0.0.1</version>
   <description>
     Prolog client for ROS.

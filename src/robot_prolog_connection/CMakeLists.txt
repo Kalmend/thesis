@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(prolog_client)
+project(robot_prolog_connection)
 
 set(CMAKE_CXX_FLAGS -std=c++11)
 
@@ -19,7 +19,7 @@ catkin_package(
   INCLUDE_DIRS
     include
   LIBRARIES
-    prolog_client
+    robot_prolog_connection
   DEPENDS
     chatbot
     prolog_common
@@ -55,7 +55,7 @@ include_directories(
 )
 
 add_library(
-  prolog_client
+  robot_prolog_connection
     src/Client.cpp
     src/RobotPrologConnection.cpp
     src/Query.cpp
@@ -65,17 +65,17 @@ add_library(
 )
 
 target_link_libraries(
-  prolog_client
+  robot_prolog_connection
     ${catkin_LIBRARIES}
 )
 
 add_executable(
-  interactive_client_node
-    src/interactive_client_node.cpp
+  robot_prolog_connection_node
+    src/main.cpp
 )
 
 target_link_libraries(
-  interactive_client_node
-    prolog_client
+  robot_prolog_connection_node
+    robot_prolog_connection
     ${catkin_LIBRARIES}
 )

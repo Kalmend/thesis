@@ -12,6 +12,8 @@ SynthesizerFestival::SynthesizerFestival():
 	int heap_size = 2500000;
 	int load_init_files = 1; // we want the festival init files loaded
 	festival_initialize(load_init_files,heap_size);
+	festival_eval_command("(Parameter.set 'Audio_Method 'Audio_Command)");
+	festival_eval_command("(Parameter.set 'Audio_Command \"aplay -Dplug:default -f S16_LE -r $SR $FILE\")");
 	festival_eval_command("(voice_eki_et_riina_clunits)");
 }
 

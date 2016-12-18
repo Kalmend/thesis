@@ -21,7 +21,7 @@
 #include "prolog_client/RobotPrologConnection.h"
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "interactive_prolog_client");
+  ros::init(argc, argv, "robot_prolog_connection");
   
   nodewrap::Node<RobotPrologConnection> node;
 
