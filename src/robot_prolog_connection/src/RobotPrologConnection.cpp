@@ -1,6 +1,6 @@
-#include "prolog_client/RobotPrologConnection.h"
+#include "RobotPrologConnection.h"
 #include <prolog_serialization/PrologSerializer.h>
-#include <prolog_client/Query.h>
+#include "Query.h"
 #include <roscpp_nodewrap/worker/WorkerQueueCallback.h>
 
 #include <iostream>

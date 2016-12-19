@@ -4,6 +4,7 @@
 	<arg name="output" default="log"/>
 	<arg name="no_recognition"  default="false" />
 	<arg name="no_voice"  default="false" />
+	<arg name="visualize"  default="false" />
 
 	<!--voice capture-->
 	<env name="GST_PLUGIN_PATH" value="$(find speech_recognition_simple)/../../deps" />
@@ -27,7 +28,9 @@
 	<node name="chatbot" pkg="chatbot" type="chatbot" output="$(arg output)"/>
 	
 	<!-- simulator -->
-	<include file="$(find chatbot_simulator)/launch/turtlebot_in_stage.launch" pass_all_args="true"/>
+	<include file="$(find chatbot_simulator)/launch/turtlebot_in_stage.launch">
+		<arg name="visualize" value="$(arg visualize)"/>
+	</include>
 	
 	<!-- gui -->
 	<node name="chatbot_gui" pkg="chatbot_gui" type="chatbot_gui" output="$(arg output)"/>

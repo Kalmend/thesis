@@ -1,6 +1,6 @@
 #pragma once
-#include "prolog_client/RobotPrologConnectionInterface.h"
-#include "prolog_client/PrioritizedTask.h"
+#include "RobotPrologConnectionInterface.h"
+#include "PrioritizedTask.h"
 
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
@@ -14,9 +14,8 @@
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
-
-#include <prolog_client/Client.h>
 #include <std_msgs/String.h>
+#include "Client.h"
 
 class TaskCompare
 {

@@ -1,4 +1,4 @@
-#include "prolog_client/PrioritizedTask.h"
+#include "PrioritizedTask.h"
 #include <chatbot/Respond.h>
 
 //commands

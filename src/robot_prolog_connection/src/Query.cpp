@@ -31,9 +31,8 @@
 #include <prolog_serialization/JSONDeserializer.h>
 #include <prolog_serialization/JSONSerializer.h>
 
-#include <prolog_client/QueryProxy.h>
-
-#include "prolog_client/Query.h"
+#include "QueryProxy.h"
+#include "Query.h"
 
 namespace prolog { namespace client {
 

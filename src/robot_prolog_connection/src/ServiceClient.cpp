@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "prolog_client/ServiceClient.h"
+#include "ServiceClient.h"
 
 namespace prolog { namespace client {
 

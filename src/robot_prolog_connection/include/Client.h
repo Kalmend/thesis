@@ -25,7 +25,7 @@
 
 #include <roscpp_nodewrap/NodeImpl.h>
 
-#include <prolog_client/ServiceClient.h>
+#include "ServiceClient.h"
 
 namespace prolog {
   namespace client {

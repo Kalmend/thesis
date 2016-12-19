@@ -1,5 +1,5 @@
 #pragma once
-#include "prolog_client/RobotPrologConnectionInterface.h"
+#include "RobotPrologConnectionInterface.h"
 
 #include <vector>
 #include <string>

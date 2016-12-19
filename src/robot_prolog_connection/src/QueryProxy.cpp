@@ -18,9 +18,8 @@
 
 #include <prolog_common/Bindings.h>
 
-#include <prolog_client/Query.h>
-
-#include "prolog_client/QueryProxy.h"
+#include "Query.h"
+#include "QueryProxy.h"
 
 namespace prolog { namespace client {
 

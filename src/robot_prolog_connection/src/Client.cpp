@@ -22,7 +22,7 @@
 #include <prolog_msgs/HasSolution.h>
 #include <prolog_msgs/OpenQuery.h>
 
-#include "prolog_client/Client.h"
+#include "Client.h"
 
 namespace prolog { namespace client {
 

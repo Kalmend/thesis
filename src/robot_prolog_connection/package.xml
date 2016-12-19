@@ -4,11 +4,11 @@
   <description>
     Prolog client for ROS.
   </description>
-  <maintainer email="ralf.kaestner@gmail.com">Ralf Kaestner</maintainer>
+  <maintainer email="kalmendoliver@gmail.com">Oliver Kalmend</maintainer>
 
   <license>LGPL</license>
 
-  <author>Ralf Kaestner</author>
+  <author>Oliver kalmend</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 

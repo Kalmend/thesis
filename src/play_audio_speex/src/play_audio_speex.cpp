@@ -183,7 +183,7 @@ void SigIntHandler(int sig)
 
 int main (int argc, char **argv)
 {
-	ros::init(argc, argv, "audio_play", ros::init_options::NoSigintHandler);
+	ros::init(argc, argv, "play_audio_speex", ros::init_options::NoSigintHandler);
 	gst_init(&argc, &argv);
 
 	SpeechRecognitionSimple client;

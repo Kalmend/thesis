@@ -18,7 +18,7 @@
 
 #include <roscpp_nodewrap/Node.h>
 
-#include "prolog_client/RobotPrologConnection.h"
+#include "RobotPrologConnection.h"
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "robot_prolog_connection");
