@@ -1,16 +1,16 @@
 <launch>
-	<group ns="audio">
-		<node name="chatbot_mic" pkg="capture_vad_sphinx" type="capture_vad_sphinx">
+	<!--group ns="audio"-->
+		<node name="capture_vad_sphinx" pkg="capture_vad_sphinx" type="capture_vad_sphinx">
 			<param name="bitrate" value="128"/>
-			<remap from="audio" to="mic_input_stream"/>
+			<!--remap from="audio" to="mic_input_stream"/-->
   		</node>
-	</group>
+	<!--/group-->
 	
-	<group ns="audio">
-		<node name="chatbot_speaker" pkg="play_audio_new" type="play_audio_new">
+	<!--group ns="audio"-->
+		<node name="play_audio" pkg="play_audio" type="play_audio">
 			<param name="dst" value="alsasink"/>
-			<remap from="audio" to="mic_input_stream"/>
+			<!--remap from="audio" to="mic_input_stream"/-->
 		</node>
-	</group>
+	<!--/group-->
 
 </launch>

@@ -215,21 +215,25 @@ struct ReactionFactory
 						{	return c == '(' || c == ')' || c == ' ' || c == '[' || c == ']' || c == '\n' || c == '.';}),
 				commandType.end());
 
-		if (commandType == "stop")
+		if (commandType == "stop" || commandType == "respond" || commandType == "ütle_kus1" || commandType == "ütle_kus2" || commandType == "ütle_kus3")
 		{
 			return std::make_shared<SyncTask>(1, rpConnection, taskString);
 		}
-		else if (commandType == "respond")
+		else if (commandType == "anna_ulata" || commandType == "võta_haara" || commandType == "tõsta_pane")
 		{
-			return std::make_shared<SyncTask>(2, rpConnection, taskString);
+			return std::make_shared<AsyncTask>(2, rpConnection, taskString);
 		}
-		else if (commandType == "liigu_mine")
+		else if (commandType == "juhata")
 		{
 			return std::make_shared<AsyncTask>(3, rpConnection, taskString);
 		}
-		else
+		else if (commandType == "liigu_mine" || commandType == "ole")
 		{
 			return std::make_shared<AsyncTask>(4, rpConnection, taskString);
+		}
+		else
+		{
+			return std::make_shared<AsyncTask>(5, rpConnection, taskString);
 		}
 
 	}

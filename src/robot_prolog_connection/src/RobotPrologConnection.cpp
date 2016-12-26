@@ -244,7 +244,10 @@ void RobotPrologConnection::handleInput(const boost::system::error_code& error, 
 
 bool RobotPrologConnection::queryReaction(const std::string& rawInput)
 {
-	toInput(trimGarbage(rawInput));
+	std::string trimmedInput = trimGarbage(rawInput);
+	if(trimmedInput.empty())
+		return false;
+	toInput(trimmedInput);
 	bool result = doQuery("t(" + std::to_string(queryNumber_++) + ").");
 	handleTask();
 	return result;

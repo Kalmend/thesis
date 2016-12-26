@@ -1,8 +1,12 @@
+#include <gst/app/gstappsink.h>
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <ros/ros.h>
 #include <signal.h>
 #include <boost/thread.hpp>
+#include <gst/app/gstappsink.h>
+#include <std_msgs/String.h>
+#include <std_srvs/SetBool.h>
 
 #include "audio_common_msgs/AudioData.h"
 #include "capture_vad_speex/GetSinkCapabilities.h"
@@ -19,9 +23,12 @@ public:
 private:
 
 	static gboolean onBusMessage(GstBus* bus, GstMessage* msg, gpointer userData);
+	static GstFlowReturn onNewRecognition (GstAppSink *appsink, gpointer userData);
 	static void onNeedData (GstElement *appsrc, guint unused_size, gpointer user_data);
 	void onAudio(const audio_common_msgs::AudioDataConstPtr &msg);
 
+	void publish( const std_msgs::String &msg );
+	bool setPause(std_srvs::SetBoolRequest &req, std_srvs::SetBoolResponse & res);
 	void exitOnMainThread(const std::string & message, int code);
 	void parseArguments();
 	void setupPipeline();
@@ -53,6 +60,9 @@ private:
 	ros::NodeHandle nh_;
 	ros::Subscriber sub_;
 	ros::ServiceClient serviceClient_;
+	ros::Publisher pub_;
+	ros::ServiceServer pauseSrv_;
+	bool paused_;
 
 	//pipeline elements
 	GstElement *pipeline_, *source_, *sink_, *decoder_, *resample_, *convert_, *recog_;

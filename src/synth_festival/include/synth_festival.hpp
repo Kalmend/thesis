@@ -14,4 +14,5 @@ private:
 	ros::NodeHandle nh_;
 	ros::Subscriber respondSub_;
 	ros::ServiceClient pauseClient_;
+	std::string voice_;
 };

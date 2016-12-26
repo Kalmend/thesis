@@ -32,7 +32,7 @@
 
 #include <prolog_common/Solution.h>
 
-#include "Query.h"
+#include <Query.h>
 
 namespace prolog {
   namespace client {

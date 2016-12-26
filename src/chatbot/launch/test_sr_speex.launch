@@ -1,18 +1,18 @@
 <launch>
     <env name="GST_PLUGIN_PATH" value="$(find speech_recognition_speex)/../../deps" />
-	<group ns="audio">
-		<node name="chatbot_mic" pkg="capture_vad_speex" type="capture_vad_speex" output="screen">
+	<!--group ns="audio"-->
+		<node name="capture_vad_speex" pkg="capture_vad_speex" type="capture_vad_speex" output="screen">
 			<param name="bitrate" value="0"/>
-			<remap from="audio" to="mic_input_stream"/>
+			<!--remap from="audio" to="mic_input_stream"/-->
   		</node>
-	</group>
+	<!--/group-->
 	
-	<group ns="audio">
-		<node name="chatbot_speech_recognition" pkg="speech_recognition_speex" type="speech_recognition_speex" output="screen">
+	<!--group ns="audio"-->
+		<node name="speech_recognition_speex" pkg="speech_recognition_speex" type="speech_recognition_speex" output="screen">
 			<param name="dst" value="stdout"/>
 			<param name="model_dir" value="$(find speech_recognition_speex)/../../deps" />
-			<remap from="audio" to="mic_input_stream"/>
+			<!--remap from="audio" to="mic_input_stream"/-->
 		</node>
-	</group>
+	<!--/group-->
 
 </launch>

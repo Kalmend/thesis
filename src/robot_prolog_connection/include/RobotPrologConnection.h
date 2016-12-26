@@ -14,8 +14,9 @@
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
+
+#include <Client.h>
 #include <std_msgs/String.h>
-#include "Client.h"
 
 class TaskCompare
 {

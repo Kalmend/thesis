@@ -1,0 +1,40 @@
+
+<launch>
+	<arg name="config_file" default="$(find prolog_server)/config/mt_server.yaml"/>
+	<arg name="output" default="log"/>
+	<arg name="no_recognition"  default="false" />
+	<arg name="no_voice"  default="false" />
+	<arg name="visualize"  default="false" />
+
+	<!--voice capture-->
+	<env name="GST_PLUGIN_PATH" value="$(find speech_recognition_simple)/../../deps" />
+<group ns="recognition">
+	<node unless="$(arg no_recognition)" name="chatbot_speech_recognition" pkg="speech_recognition_simple" type="speech_recognition_simple" output="$(arg output)">
+		<param name="model_dir" value="$(find speech_recognition_simple)/../../deps" />
+	</node>
+</group>
+	
+	<!-- server -->
+	<node name="prolog_server" pkg="prolog_server" type="mt_server_node" output="$(arg output)">
+		<rosparam command="load" file="$(arg config_file)"/>
+	</node>
+	
+	<!-- robot_prolog_connection -->
+	<node name="robot_prolog_connection_node" pkg="robot_prolog_connection" type="robot_prolog_connection_node" output="$(arg output)">
+                <rosparam command="load" file="$(arg config_file)"/>
+        </node>
+
+	<!-- chatbot -->
+	<node name="chatbot" pkg="chatbot" type="chatbot" output="$(arg output)"/>
+	
+	<!-- simulator -->
+	<include file="$(find chatbot_simulator)/launch/turtlebot_in_stage.launch">
+		<arg name="visualize" value="$(arg visualize)"/>
+	</include>
+	
+	<!-- gui -->
+	<node name="chatbot_gui" pkg="chatbot_gui" type="chatbot_gui" output="$(arg output)"/>
+	
+	<!-- synth -->
+	<node unless="$(arg no_voice)" name="synth_festival" pkg="synth_festival" type="synth_festival" output="$(arg output)"/>
+</launch>
