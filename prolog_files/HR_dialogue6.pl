@@ -30,6 +30,10 @@ do_change_task(Name) :-
     retractall(task_file(_)),
     assert(task_file(Name)).
 
+do_change_context(Name) :-
+    retractall(context_file(_)),
+    assert(context_file(Name)).
+
 change_input_filename(Name) :- 
     not(is_task_alive()) -> do_change_input(Name) ; false.
 
@@ -38,6 +42,9 @@ change_output_filename(Name) :-
 
 change_task_filename(Name) :- 
     not(is_task_alive()) -> do_change_task(Name) ; false.
+
+change_context_filename(Name) :- 
+    not(is_task_alive()) -> do_change_context(Name) ; false.
 
 %=========================== TEST ================================
 t(N):-			% Loads necessary static data for interpretation
@@ -298,14 +305,14 @@ reaction(_,ToR, _,stop):-
 	respond(ToR,[peatan,tegevuse]),
 	stop(ToR),!.
 reaction(N,ToR, FromR,juhata):-
-	respond(ToR,[juhatan]),
+	respond(ToR,[juhatan,palun, järgnege, mulle]),
 	goal(N,_,CC0,_,CC2,CC2P,_,_,_),
 %	cc0(CC0),
 	retract(world(CC0, Idx0, _, XYZQ0,_)),	% keda juhatada
 	goto(ToR,CC0,XYZQ0), wait(FromR),		% mine juhatava juurde
-	retract(world(me,Idx,_,_,_)),
-	get_time(T0),
-	asserta(world(me,Idx,Idx0,XYZQ0,T0)),
+%	retract(world(me,Idx,_,_,_)),
+%	get_time(T0),
+%	asserta(world(me,Idx,Idx0,XYZQ0,T0)),
 %	cc2(CC2),cc2TXT(CC2P),
 	append([CC0,palun, järgnege, mulle, juhatan, teid],CC2P,Text1),
 	respond(ToR,Text1),

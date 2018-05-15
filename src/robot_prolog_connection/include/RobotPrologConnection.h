@@ -78,6 +78,7 @@ private:
 
 	std::string getFile(const std::string& file);
 	void cleanFile(const std::string& file);
+	bool cleanContext();
 
 	prolog::client::ServiceClient serviceClient_;
 	boost::asio::io_service ioService_;
@@ -93,6 +94,8 @@ private:
 	std::string inputFile_;
 	std::string outputFile_;
 	std::string taskFile_;
+	std::string contextFile_;
+	std::string contextCleanFile_;
 	std::priority_queue<std::shared_ptr<PrioritizedTask>, std::vector<std::shared_ptr<PrioritizedTask>>, TaskCompare> queuedTasks_;
 	std::shared_ptr<PrioritizedTask> currentTask_;
 

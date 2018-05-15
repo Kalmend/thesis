@@ -1,1 +1,0 @@
-reaction(1,'/home/oliver/thesis/catkin_ws/prolog_files/output.txt','/home/oliver/thesis/catkin_ws/prolog_files/input.txt',juhata).

@@ -14,7 +14,7 @@ ChatCore::ChatCore() :
 	gotoAc_(nh_, "move_base", false),
 	pickSub_(nh_.subscribe("picker", 1, &ChatCore::pickDoneCb, this)),
 	placeSub_(nh_.subscribe("placer", 1, &ChatCore::placeDoneCb, this)),
-	respondPub_(nh_.advertise<std_msgs::String>("synthesizer/text_to_speak", 10)),
+	respondPub_(nh_.advertise<std_msgs::String>("synth_festival/text_to_speak", 10)),
 	statusPub_(nh_.advertise<std_msgs::String>("chatbot_gui/status", 10)),
 	logPub_(nh_.advertise<std_msgs::String>("chatbot_gui/log", 10)),
 	respondSrv_(nh_.advertiseService("/respond", &ChatCore::executeRespond, this))

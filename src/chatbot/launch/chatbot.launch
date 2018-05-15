@@ -18,11 +18,12 @@
 	<node name="prolog_server" pkg="prolog_server" type="mt_server_node" output="$(arg output)">
 		<rosparam command="load" file="$(arg config_file)"/>
 	</node>
-	
+
 	<!-- robot_prolog_connection -->
-	<node name="robot_prolog_connection_node" pkg="robot_prolog_connection" type="robot_prolog_connection_node" output="$(arg output)">
+       	<node name="robot_prolog_connection_node" pkg="robot_prolog_connection" type="robot_prolog_connection_node" output="$(arg output)">
                 <rosparam command="load" file="$(arg config_file)"/>
         </node>
+
 
 	<!-- chatbot -->
 	<node name="chatbot" pkg="chatbot" type="chatbot" output="$(arg output)"/>

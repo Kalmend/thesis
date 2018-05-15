@@ -49,6 +49,9 @@ IF(NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/task.txt)
 ENDIF (NOT EXISTS  ${CMAKE_SOURCE_DIR}/../prolog_files/task.txt)
 add_definitions(-DTASK_FILE="${CMAKE_SOURCE_DIR}/../prolog_files/task.txt")
 
+add_definitions(-DCONTEXT_FILE="${CMAKE_SOURCE_DIR}/../prolog_files/context.pl")
+add_definitions(-DCONTEXT_CLEAN_FILE="${CMAKE_SOURCE_DIR}/../prolog_files/context_clean.pl")
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}

@@ -26,8 +26,6 @@ RobotPrologConnection::RobotPrologConnection() :
 		inputStream_(ioService_, dup(STDIN_FILENO)),
 		inputColumn_(0),
 		queryNumber_(0),
-		inputFile_(""),
-		outputFile_(""),
 		currentTask_(nullptr),
 		gotoAc_("goto", false),
 		pickAc_("pick", false),
@@ -140,6 +138,11 @@ void RobotPrologConnection::init()
 
 	if (connected)
 	{
+		inputFile_ = getParam(ros::names::append("prolog", "input_file"), std::string(INPUT_FILE));
+		outputFile_ = getParam(ros::names::append("prolog", "output_file"), std::string(OUTPUT_FILE));
+		taskFile_ = getParam(ros::names::append("prolog", "task_file"), std::string(TASK_FILE));
+		contextCleanFile_ = getParam(ros::names::append("prolog", "context_clean_file"), std::string(CONTEXT_CLEAN_FILE));
+		contextFile_ = getParam(ros::names::append("prolog", "context_file"), std::string(CONTEXT_FILE));
 
 		initChatCore();
 		initInputOutput();
@@ -161,8 +164,9 @@ void RobotPrologConnection::init()
 
 void RobotPrologConnection::initChatCore()
 {
+
 	std::string coreFile = getParam(ros::names::append("prolog", "chat_core"), std::string(CHAT_CORE));
-	if (!doQuery("ensure_loaded('" + coreFile + "')."))
+	if (!cleanContext() || !doQuery("ensure_loaded('" + coreFile + "')."))
 	{
 		ROS_ERROR("PrologRobotInterface::initChatCore: Failure to load chat core.");
 		ROS_ERROR("PrologRobotInterface::initChatCore: Is swi-prolog up to date, supports \"->\"?");
@@ -173,10 +177,6 @@ void RobotPrologConnection::initChatCore()
 
 void RobotPrologConnection::initInputOutput()
 {
-	inputFile_ = getParam(ros::names::append("prolog", "input_file"), std::string(INPUT_FILE));
-	outputFile_ = getParam(ros::names::append("prolog", "output_file"), std::string(OUTPUT_FILE));
-	taskFile_ = getParam(ros::names::append("prolog", "task_file"), std::string(TASK_FILE));
-
 	doQuery("kill_current_task.");
 	if (!doQuery("change_input_filename('" + inputFile_ + "').")
 			|| !doQuery("change_output_filename('" + outputFile_ + "').")
@@ -364,3 +364,16 @@ void RobotPrologConnection::cleanFile(const std::string& file)
 	fileStream.open(file.c_str(), std::ios::trunc);
 	fileStream.close();
 }
+
+bool RobotPrologConnection::cleanContext()
+{
+
+   /* std::ifstream src(contextCleanFile_, std::ios::binary);
+    std::ofstream dest(contextFile_, std::ios::binary);
+    dest << src.rdbuf();
+    bool success =  src && dest;
+    src.close();
+    dest.close();*/
+    return true;
+}
+
